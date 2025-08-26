@@ -29,7 +29,9 @@ public class Main {
                     // agregarVoluntario();
                     break;
                 case 2:
-                    // eliminarVoluntario();
+                    System.out.print("Ingrese el RUT del voluntario a eliminar: ");
+                    String rutEliminar = sc.nextLine();
+                    cantidad_voluntarios = eliminar_voluntario(voluntarios, cantidad_voluntarios, rutEliminar);
                     break;
                 case 3:
                     mostrarOrganizaciones(sc);
