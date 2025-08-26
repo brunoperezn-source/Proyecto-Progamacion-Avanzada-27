@@ -32,7 +32,7 @@ public class Main {
                     // eliminarVoluntario();
                     break;
                 case 3:
-                    mostrarOrganizacionesMenu(sc);
+                    mostrarOrganizaciones(sc);
                     break;
                 case 4:
                     // asignarEmergencia();
@@ -46,7 +46,7 @@ public class Main {
         } while(opcion != 0);
     }
 
-    static void mostrarOrganizacionesMenu(Scanner sc) {
+    static void mostrarOrganizaciones(Scanner sc) {
         int subopcion;
         do {
             System.out.println("\n--- Organizaciones ---");
