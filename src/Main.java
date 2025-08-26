@@ -14,7 +14,7 @@ import java.util.*;
 public class Main {
     public static void main(String[] args){
         int cantidad_voluntarios = 0;
-        int talla_voluntarios = 10;
+        int talla_voluntarios = 2;
         
         Voluntario[] voluntarios = new Voluntario[talla_voluntarios];
         cantidad_voluntarios = llenar_array_voluntarios(voluntarios, cantidad_voluntarios, talla_voluntarios);
@@ -24,13 +24,13 @@ public class Main {
     static int llenar_array_voluntarios(Voluntario[] voluntarios, int cantidad_voluntarios, int talla_voluntarios){
         Voluntario voluntario_agregar;
         for(; talla_voluntarios > cantidad_voluntarios; cantidad_voluntarios++){
-            voluntario_agregar = new Voluntario("bruno", "216230a795", 1.0, 1.0, 1.0);
-            if (voluntario_agregar.es_valido() == -1) break;
+            voluntario_agregar = new Voluntario("bruno", "216230a795", new Stats(1.0,1.0,1.0), new Calendario_disponibillidad(1,1,1,1,1,1,1));
+            if (!voluntario_agregar.es_valido()) break;
             
             voluntarios[cantidad_voluntarios] = voluntario_agregar;
             
         }
-        System.out.println(cantidad_voluntarios);
+        System.out.printf("cantidad de voluntarios : %d\n\n", cantidad_voluntarios);
         return cantidad_voluntarios;
     } 
     static void mostrar_voluntarios(Voluntario[] voluntarios, int cantidad_voluntarios){
@@ -41,88 +41,167 @@ public class Main {
     }
 }
 
+class Voluntariado{
+    private String nombre = "";
+    private HashMap<Integer, Voluntario> posibles_voluntarios = null;
+    private HashMap<Integer, Voluntario> voluntarios_elegibles = null;
+    
+    public void Voluntariado(String nombre_asignado){
+        this.nombre = nombre_asignado;
+    }
+}
+
 class Voluntario {
-    private HashMap<String, Stats> habilidades;
-    private String rut;
+    private String nombre = "";
+    private int rut;
+    private Stats habilidades = null;
+    private Calendario_disponibillidad disponibilidad;
     
     /*Constructores*/
-    public Voluntario (String rut){
-        this.rut = rut;
-        this.habilidades = new HashMap<>();
+    public Voluntario (String nombre_asignado, String rut_asignado, Stats stat_asignado, Calendario_disponibillidad disponibilidad_asignada){
+        this.nombre = nombre_asignado;
+        if (!set_rut_integer(rut_asignado)){
+            this.rut = -1;
+            System.out.println("ERROR : rut ingresado no es válido");
+        }
+        this.habilidades = stat_asignado;
+        this.disponibilidad = disponibilidad_asignada;
     }
+    
     /*Getters*/
-    public String getRut()
+    public int get_rut()
     {
         return this.rut;
     }
-    
+    public Stats get_stats(){
+        return this.habilidades;
+    }
+    public void set_disponibilidad(
+            int disponibilidad_lunes, 
+            int disponibilidad_martes, 
+            int disponibilidad_miercoles, 
+            int disponibilidad_jueves,
+            int disponibilidad_viernes,
+            int disponibilidad_sabado,
+            int disponibilidad_domingo){
+        this.disponibilidad.set_all(
+                disponibilidad_lunes,
+                disponibilidad_martes,
+                disponibilidad_miercoles,
+                disponibilidad_jueves,
+                disponibilidad_viernes,
+                disponibilidad_sabado,
+                disponibilidad_domingo);
+    }
+            
     /*funciones*/
     public void mostrar(){
-        System.out.println("RUT: " + this.rut);
-        System.out.println("Habilidades: " + this.habilidades);
+        System.out.printf("NOMBRE : %s, RUT: %d\nHABILIDADES : FISICO %.1f ; SOCIAL %.1f ; EFICIENCIA %.1f\n\n",
+                this.nombre, this.rut, this.habilidades.get_fisico(), this.habilidades.get_social(), this.habilidades.get_eficiencia());
     }
     
-    public int validar_RUT(String rut_validar){
-        int rut_transformado = -1;
+    public Boolean set_rut_integer(String nuevo_rut){
         try{
-            String rut_limpio = rut_validar.replaceAll("[^0-9]", "");
-            rut_transformado = Integer.parseInt(rut_limpio);
-            
+            this.rut = Integer.parseInt(nuevo_rut.replaceAll("[^0-9]", ""));
         }
         catch(NumberFormatException e){
             System.out.println("ERROR : RUT INVALIDO");
+            return false;
         }
-        return rut_transformado;
+        return true;
     }
-    public void ponerPersona(Stats persona){
-        this.habilidades.put(this.rut, persona);
+    public Boolean es_valido(){
+        if (this.rut == -1 && this.nombre.equals("")){
+            return false;
+        }
+        return true;
     }
-
 }
 
-
 class Stats{
-    private String nombre;
     private double valor_fisico;
     private double valor_social;
     private double valor_eficiencia;
-    public Stats(String nombre, double valor_fisico, double valor_social, double valor_eficiencia) {
-        this.nombre = nombre;
+    
+    public Stats(double valor_fisico, double valor_social, double valor_eficiencia) {
         this.valor_fisico = valor_fisico;
         this.valor_social = valor_social;
         this.valor_eficiencia = valor_eficiencia;
     }
-    public void set_Nombre(String nombre)
-    {
-        this.nombre = nombre;
-    }
-    public String get_Nombre(){
-        return this.nombre;
-    }
-    public void set_Fisico(double valor_fisico)
+    
+    public void set_fisico(double valor_fisico)
     {
         this.valor_fisico = valor_fisico;
     }
-    public double get_Fisico()
+    public double get_fisico()
     {
         return this.valor_fisico;
     }
-    public void set_Social(double valor_social)
+    public void set_social(double valor_social)
     {
         this.valor_social = valor_social;
     }
-    public double get_Social()
+    public double get_social()
     {
         return this.valor_social;
     }
-    public void set_Eficiencia(double valor_eficiencia)
+    public void set_eficiencia(double valor_eficiencia)
     {
         this.valor_eficiencia = valor_eficiencia;
     }
-    public double get_Eficiencia()
+    public double get_eficiencia()
     {
         return this.valor_eficiencia;
     }
     
 }
 
+class Calendario_disponibillidad{
+    private Boolean lunes;
+    private Boolean martes;
+    private Boolean miercoles;
+    private Boolean jueves;
+    private Boolean viernes;
+    private Boolean sabado;
+    private Boolean domingo;
+    
+    public Calendario_disponibillidad(
+            int disponibilidad_lunes, 
+            int disponibilidad_martes, 
+            int disponibilidad_miercoles, 
+            int disponibilidad_jueves,
+            int disponibilidad_viernes,
+            int disponibilidad_sabado,
+            int disponibilidad_domingo){
+        this.lunes = Util.int_to_bool(disponibilidad_lunes);
+        this.martes = Util.int_to_bool(disponibilidad_martes);
+        this.miercoles = Util.int_to_bool(disponibilidad_miercoles);
+        this.jueves = Util.int_to_bool(disponibilidad_jueves);
+        this.viernes = Util.int_to_bool(disponibilidad_viernes);
+        this.sabado = Util.int_to_bool(disponibilidad_sabado);
+        this.domingo = Util.int_to_bool(disponibilidad_domingo);
+    }
+    
+    public void set_all(
+            int disponibilidad_lunes, 
+            int disponibilidad_martes, 
+            int disponibilidad_miercoles, 
+            int disponibilidad_jueves,
+            int disponibilidad_viernes,
+            int disponibilidad_sabado,
+            int disponibilidad_domingo){
+        this.lunes = Util.int_to_bool(disponibilidad_lunes);
+        this.martes = Util.int_to_bool(disponibilidad_martes);
+        this.miercoles = Util.int_to_bool(disponibilidad_miercoles);
+        this.jueves = Util.int_to_bool(disponibilidad_jueves);
+        this.viernes = Util.int_to_bool(disponibilidad_viernes);
+        this.sabado = Util.int_to_bool(disponibilidad_sabado);
+        this.domingo = Util.int_to_bool(disponibilidad_domingo);
+    }
+}
+class Util{
+    public static Boolean int_to_bool(int number){
+        if (number != 1) return false;
+        return true;
+    }
+}
