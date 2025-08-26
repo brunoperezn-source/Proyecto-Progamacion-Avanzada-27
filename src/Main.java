@@ -39,15 +39,39 @@ public class Main {
             voluntarios[i].mostrar();
         }
     }
+    static int eliminar_voluntario(Voluntario[] voluntarios, int cantidad_voluntarios, String rutEliminar) {
+        int rutBuscar;
+        try {
+            rutBuscar = Integer.parseInt(rutEliminar.replaceAll("[^0-9]", ""));
+        } catch (NumberFormatException e) {
+            System.out.println("ERROR: RUT inválido para eliminación.");
+            return cantidad_voluntarios;
+        }
+    
+        for (int i = 0; i < cantidad_voluntarios; i++) {
+            if (voluntarios[i].get_rut() == rutBuscar) {
+                for (int j = i; j < cantidad_voluntarios - 1; j++) {
+                    voluntarios[j] = voluntarios[j + 1];
+                }
+                voluntarios[cantidad_voluntarios - 1] = null;
+                System.out.println("Voluntario eliminado.");
+                return cantidad_voluntarios - 1;
+            }
+        }
+    System.out.println("No se encontró voluntario con ese RUT.");
+    return cantidad_voluntarios;
+    }
 }
 
 class Voluntariado{
     private String nombre = "";
-    private HashMap<Integer, Voluntario> posibles_voluntarios = null;
-    private HashMap<Integer, Voluntario> voluntarios_elegibles = null;
+    private HashMap<Integer, Voluntario> posibles_voluntarios;
+    private HashMap<Integer, Voluntario> voluntarios_elegibles;
     
-    public void Voluntariado(String nombre_asignado){
+    public Voluntariado(String nombre_asignado){
         this.nombre = nombre_asignado;
+        this.posibles_voluntarios = new HashMap<>();
+        this.voluntarios_elegibles = new HashMap<>();
     }
 }
 
