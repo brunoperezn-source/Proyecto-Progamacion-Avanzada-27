@@ -1,5 +1,3 @@
-
-
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Main.java to edit this template
@@ -13,12 +11,65 @@ import java.util.*;
 
 public class Main {
     public static void main(String[] args){
-        int cantidad_voluntarios = 0;
-        int talla_voluntarios = 10;
-        
-        Voluntario[] voluntarios = new Voluntario[talla_voluntarios];
-        cantidad_voluntarios = llenar_array_voluntarios(voluntarios, cantidad_voluntarios, talla_voluntarios);
-        mostrar_voluntarios(voluntarios, cantidad_voluntarios);
+        Scanner sc = new Scanner(System.in);
+        int opcion;
+        do {
+            System.out.println("\n--- Menú Principal ---");
+            System.out.println("1. Agregar voluntario");
+            System.out.println("2. Eliminar voluntario (por RUT)");
+            System.out.println("3. Mostrar organizaciones");
+            System.out.println("4. Asignación de emergencia");
+            System.out.println("0. Salir");
+            System.out.print("Seleccione una opción: ");
+            opcion = sc.nextInt();
+            sc.nextLine();
+
+            switch(opcion) {
+                case 1:
+                    // agregarVoluntario();
+                    break;
+                case 2:
+                    // eliminarVoluntario();
+                    break;
+                case 3:
+                    mostrarOrganizacionesMenu(sc);
+                    break;
+                case 4:
+                    // asignarEmergencia();
+                    break;
+                case 0:
+                    System.out.println("Saliendo...");
+                    break;
+                default:
+                    System.out.println("Opción inválida.");
+            }
+        } while(opcion != 0);
+    }
+
+    static void mostrarOrganizacionesMenu(Scanner sc) {
+        int subopcion;
+        do {
+            System.out.println("\n--- Organizaciones ---");
+            System.out.println("1. Mostrar proyectos");
+            System.out.println("2. Denominar catástrofe");
+            System.out.println("0. Volver");
+            System.out.print("Seleccione una opción: ");
+            subopcion = sc.nextInt();
+            sc.nextLine();
+
+            switch(subopcion) {
+                case 1:
+                    // mostrarProyectos();
+                    break;
+                case 2:
+                    // denominarCatastrofe();
+                    break;
+                case 0:
+                    break;
+                default:
+                    System.out.println("Opción inválida.");
+            }
+        } while(subopcion != 0);
     }
     
     static int llenar_array_voluntarios(Voluntario[] voluntarios, int cantidad_voluntarios, int talla_voluntarios){
