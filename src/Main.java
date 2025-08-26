@@ -39,6 +39,20 @@ public class Main {
             voluntarios[i].mostrar();
         }
     }
+    static int eliminar_voluntario(Voluntario[] voluntarios, int cantidad_voluntarios, String rutEliminar) {
+    for (int i = 0; i < cantidad_voluntarios; i++) {
+        if (voluntarios[i].getRut().equals(rutEliminar)) {
+            for (int j = i; j < cantidad_voluntarios - 1; j++) {
+                voluntarios[j] = voluntarios[j + 1];
+            }
+            voluntarios[cantidad_voluntarios - 1] = null;
+            System.out.println("Voluntario eliminado.");
+            return cantidad_voluntarios - 1;
+        }
+    }
+    System.out.println("No se encontró voluntario con ese RUT.");
+    return cantidad_voluntarios;
+   }
 }
 
 class Voluntario {
