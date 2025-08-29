@@ -118,10 +118,60 @@ public class Main {
 }
 
 class Organization {
-    private HashMap<String, Project> projects;
+    private String nombre;
+    private Project[] proyectos;
+
+    public Organization(String nombre, int cantidadProyectos) {
+        this.nombre = nombre;
+        this.proyectos = new Project[cantidadProyectos];
+    }
+    public String getNombre() {
+        return nombre;
+    }
+    public Project[] getProyectos() {
+        return proyectos;
+    }
+    public void setProyecto(int index, Project proyecto) {
+        if (index >= 0 && index < proyectos.length) {
+            proyectos[index] = proyecto;
+        }
+    }
 }
 
-class Project {}
+class Project {
+    private String nombre;
+    private int fisico;
+    private int social;
+    private int eficiencia;
+    private int nivelCatastrofe;
+
+    public Project(String nombre, int fisico, int social, int eficiencia, int nivelCatastrofe) {
+        this.nombre = nombre;
+        this.fisico = fisico;
+        this.social = social;
+        this.eficiencia = eficiencia;
+        this.nivelCatastrofe = nivelCatastrofe;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+    public int getFisico() {
+        return fisico;
+    }
+    public int getSocial() {
+        return social;
+    }
+    public int getEficiencia() {
+        return eficiencia;
+    }
+    public int getNivelCatastrofe() {
+        return nivelCatastrofe;
+    }
+    public void setNivelCatastrofe(int nivelCatastrofe) {
+        this.nivelCatastrofe = nivelCatastrofe;
+    }
+}
 
 class Volunteering {
     private String name = "";
