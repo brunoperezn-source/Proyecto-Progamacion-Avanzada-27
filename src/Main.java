@@ -7,9 +7,10 @@ public class Main {
         do {
             System.out.println("\n--- Menú Principal ---");
             System.out.println("1. Agregar voluntario");
-            System.out.println("2. Eliminar voluntario (por RUT)");
-            System.out.println("3. Mostrar organizaciones");
-            System.out.println("4. Asignación de emergencia");
+            System.out.println("2. Asignar voluntarios a proyecto");
+            System.out.println("3. Eliminar voluntario (por RUT)");
+            System.out.println("4. Mostrar organizaciones");
+            System.out.println("5. Asignación de emergencia");
             System.out.println("0. Salir");
             System.out.print("Seleccione una opción: ");
             option = scanner.nextInt();
@@ -20,14 +21,17 @@ public class Main {
                     // agregarVoluntario();
                     break;
                 case 2:
+                    //asignarVoluntarios();
+                    break;
+                case 3:
                     System.out.print("Ingrese el RUT del voluntario a eliminar: ");
                     String rutEliminar = scanner.nextLine();
                     //cantidad_voluntarios = eliminar_voluntario(voluntarios, cantidad_voluntarios, rutEliminar);
                     break;
-                case 3:
+                case 4:
                     mostrarOrganizaciones(scanner);
                     break;
-                case 4:
+                case 5:
                     // asignarEmergencia();
                     break;
                 case 0:
@@ -115,6 +119,7 @@ public class Main {
         System.out.println("No se encontró voluntario con ese RUT.");
         return count;
     }
+    
 }
 
 class Organization {
@@ -174,14 +179,94 @@ class Project {
 }
 
 class Volunteering {
-    private String name = "";
     private HashMap<Integer, Voluntario> possible_volunteers;
     private HashMap<Integer, Voluntario> eligible_volunteers;
     
-    public Volunteering(String assigned_name){
-        this.name = assigned_name;
+    public Volunteering(){
         this.possible_volunteers = new HashMap<>();
         this.eligible_volunteers = new HashMap<>();
+    }
+    public void loadVolunteers(Voluntario[] voluntarios, int cantidad)
+    {
+        possible_volunteers.clear();
+        for (int i = 0; i < cantidad; i++)
+        {
+            if(voluntarios[i] != null && voluntarios[i].is_valid()){
+                possible_volunteers.put(voluntarios[i].get_rut(), voluntarios[i]);
+            }
+        }
+        System.out.println("Cargados " + possible_volunteers.size() +"voluntarios al sistema.");
+    }
+    
+    public void evaluate(Voluntario[] voluntarios, int cantidad, Project projecto)
+    {
+        if (possible_volunteers.isEmpty()) {
+            loadVolunteers(voluntarios, cantidad);
+        }
+        eligible_volunteers.clear();
+        for (Voluntario voluntario : possible_volunteers.values()) {
+            if (isEligibleForProject(voluntario, projecto)) {
+                eligible_volunteers.put(voluntario.get_rut(), voluntario);
+            }
+        }
+    }
+    
+    private boolean isEligibleForProject(Voluntario volunteer, Project projecto){
+        Stats volunteerStats = volunteer.get_stats();
+        if (volunteerStats.get_physical() < projecto.getFisico() ||
+            volunteerStats.get_social() < projecto.getSocial() ||
+            volunteerStats.get_efficiency() < projecto.getEficiencia()) {
+            return false;
+        }
+        return true;
+    }
+    
+    public double calculateCompatibility(Voluntario volunteer, Project projecto)
+    {
+        Stats stats = volunteer.get_stats();
+        double total_score = 0.0;
+        int valid_stats = 0;
+        if (projecto.getFisico() > 0){
+            double physicalMultiple = stats.get_physical() / projecto.getFisico();
+            total_score += physicalMultiple;
+            valid_stats++;
+        }
+        if (projecto.getSocial() > 0){
+            double socialMultiple = stats.get_social() / projecto.getSocial();
+            total_score += socialMultiple;
+            valid_stats++;
+        }
+        if (projecto.getEficiencia() > 0){
+            double efficiencyMultiple = stats.get_efficiency() / projecto.getEficiencia();
+            total_score += efficiencyMultiple;
+            valid_stats++;
+        }
+        return valid_stats > 0 ? total_score / valid_stats : 0.0;
+    }
+    public ArrayList<Voluntario> getBestMatches(Project project, int cantidad)
+    {
+        ArrayList<Voluntario> bestMatches = new ArrayList<>();
+        ArrayList<VolunteerScore> scores = new ArrayList<>();
+        for (Voluntario volunteer : eligible_volunteers.values()) {
+            double score = calculateCompatibility(volunteer, project);
+            scores.add(new VolunteerScore(volunteer, score));
+        }
+        scores.sort((a, b) -> Double.compare(b.score, a.score));
+        int limit = Math.min(cantidad, scores.size());
+        for (int i = 0; i < limit; i++) {
+            bestMatches.add(scores.get(i).volunteer);
+        }
+        
+        return bestMatches;
+    }
+    private static class VolunteerScore {
+        Voluntario volunteer;
+        double score;
+        
+        VolunteerScore(Voluntario volunteer, double score) {
+            this.volunteer = volunteer;
+            this.score = score;
+        }
     }
 }
 
@@ -243,6 +328,9 @@ class Voluntario {
     }
     public Boolean is_valid(){
         return !(this.rut == -1 && this.name.equals(""));
+    }
+    public String getNombre() { 
+    return this.name; 
     }
 }
 
