@@ -2,7 +2,7 @@ Sistema de Gestión de Programas de Voluntariado (SIA)
 
 *Descripción del Proyecto*
 
-Este proyecto corresponde al Sistema de Información (SIA) para la gestión de programas de voluntariado.
+Este proyecto corresponde al Sistema de Información para la gestión de programas de voluntariado.
 El sistema permite registrar voluntarios, organizaciones y proyectos, así como asignar voluntarios a proyectos según sus habilidades y disponibilidad.
 Además, se considera un modo de emergencia por catástrofe, donde se pueden asignar voluntarios de forma rápida a proyectos críticos.
 
@@ -73,6 +73,7 @@ Volunteering.java → Clase de apoyo con mapas de voluntarios elegibles y posibl
 Clonar este repositorio:
 
 git clone https://github.com/usuario/repositorio.git
+
 cd repositorio
 
 
