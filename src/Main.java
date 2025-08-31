@@ -1,125 +1,15 @@
 import java.util.*;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import java.io.FileInputStream;
+import java.io.IOException;
 
 public class Main {
-    public static void main(String[] args){
-        Scanner scanner = new Scanner(System.in);
-        int option;
-        do {
-            System.out.println("\n--- Menú Principal ---");
-            System.out.println("1. Agregar voluntario");
-            System.out.println("2. Asignar voluntarios a proyecto");
-            System.out.println("3. Eliminar voluntario (por RUT)");
-            System.out.println("4. Mostrar organizaciones");
-            System.out.println("5. Asignación de emergencia");
-            System.out.println("0. Salir");
-            System.out.print("Seleccione una opción: ");
-            option = scanner.nextInt();
-            scanner.nextLine();
-
-            switch(option) {
-                case 1:
-                    // agregarVoluntario();
-                    break;
-                case 2:
-                    //asignarVoluntarios();
-                    break;
-                case 3:
-                    System.out.print("Ingrese el RUT del voluntario a eliminar: ");
-                    String rutEliminar = scanner.nextLine();
-                    //cantidad_voluntarios = eliminar_voluntario(voluntarios, cantidad_voluntarios, rutEliminar);
-                    break;
-                case 4:
-                    mostrarOrganizaciones(scanner);
-                    break;
-                case 5:
-                    // asignarEmergencia();
-                    break;
-                case 0:
-                    System.out.println("Saliendo...");
-                    break;
-                default:
-                    System.out.println("Opción inválida.");
-            }
-        } while(option != 0);
+    public static void main(String[] args) {
+        VolunteerManager manager = new VolunteerManager();
+        Menu menu = new Menu(manager);
+        menu.mostrarMenuPrincipal();
     }
-    
-    static void mostrarOrganizaciones(Scanner sc) {
-        int suboption;
-        do {
-            System.out.println("\n--- Organizaciones ---");
-            System.out.println("1. Mostrar proyectos");
-            System.out.println("2. Denominar catástrofe");
-            System.out.println("0. Volver");
-            System.out.print("Seleccione una opción: ");
-            suboption = sc.nextInt();
-            sc.nextLine();
-
-            switch(suboption) {
-                case 1:
-                    mostrarProyectos();
-                    break;
-                case 2:
-                    // denominarCatastrofe();
-                    break;
-                case 0:
-                    break;
-                default:
-                    System.out.println("Opción inválida.");
-            }
-        } while(suboption != 0);
-    }
-
-    static void mostrarProyectos() {
-        System.out.println("Mostrando proyectos...");
-    }
-
-    static int fill_volunteers_array(Voluntario[] volunteers, int current_count, int max_size){
-        Voluntario new_volunteer;
-        for(; max_size > current_count; current_count++){
-            new_volunteer = new Voluntario("bruno", "216230795", new Stats(1.0,1.0,1.0), new WeeklySchedule(
-                    Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, 
-                    Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, 
-                    Boolean.TRUE, Boolean.TRUE, Boolean.TRUE,
-                    Boolean.TRUE, Boolean.TRUE, Boolean.TRUE,
-                    Boolean.TRUE, Boolean.TRUE, Boolean.TRUE,
-                    Boolean.TRUE, Boolean.TRUE, Boolean.TRUE,
-                    Boolean.TRUE, Boolean.TRUE, Boolean.TRUE));
-            if (!new_volunteer.is_valid()) break;
-            volunteers[current_count] = new_volunteer;
-        }
-        System.out.printf("cantidad de voluntarios : %d\n\n", current_count);
-        return current_count;
-    }
-    
-    static void show_volunteers(Voluntario[] volunteers, int count){
-        for(int i = 0; i < count; i++){
-            volunteers[i].show();
-        }
-    }
-    
-    static int delete_volunteer(Voluntario[] volunteers, int count, String rutEliminar) {
-        int rutBuscar;
-        try {
-            rutBuscar = Integer.parseInt(rutEliminar.replaceAll("[^0-9]", ""));
-        } catch (NumberFormatException e) {
-            System.out.println("ERROR: RUT inválido para eliminación.");
-            return count;
-        }
-    
-        for (int i = 0; i < count; i++) {
-            if (volunteers[i].get_rut() == rutBuscar) {
-                for (int j = i; j < count - 1; j++) {
-                    volunteers[j] = volunteers[j + 1];
-                }
-                volunteers[count - 1] = null;
-                System.out.println("Voluntario eliminado.");
-                return count - 1;
-            }
-        }
-        System.out.println("No se encontró voluntario con ese RUT.");
-        return count;
-    }
-    
 }
 
 class Organization {
@@ -476,4 +366,333 @@ class Util{
 class Time{
     public enum DayOfWeek { MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY }
     public enum TimeOfDay { MORNING, MIDDAY, EVENING }
+}
+
+class Menu {
+    private Scanner scanner;
+    private VolunteerManager manager;
+    
+    public Menu(VolunteerManager manager) {
+        this.scanner = new Scanner(System.in);
+        this.manager = manager;
+    }
+    
+    public void mostrarMenuPrincipal() {
+        int option;
+        do {
+            System.out.println("\n--- Menú Principal ---");
+            System.out.println("1. Agregar voluntarios (desde Excel)");
+            System.out.println("2. Asignar voluntarios a proyecto");
+            System.out.println("3. Eliminar voluntario (por RUT)");
+            System.out.println("4. Mostrar organizaciones");
+            System.out.println("5. Asignación de emergencia");
+            System.out.println("6. Mostrar voluntarios cargados");
+            System.out.println("0. Salir");
+            System.out.print("Seleccione una opción: ");
+            option = scanner.nextInt();
+            scanner.nextLine();
+
+            switch(option) {
+                case 1:
+                    cargarVoluntarios();
+                    break;
+                case 2:
+                    System.out.println("Función en desarrollo...");
+                    break;
+                case 3:
+                    eliminarVoluntario();
+                    break;
+                case 4:
+                    mostrarOrganizaciones();
+                    break;
+                case 5:
+                    System.out.println("Función en desarrollo...");
+                    break;
+                case 6:
+                    manager.mostrarVoluntarios();
+                    break;
+                case 0:
+                    System.out.println("Saliendo...");
+                    break;
+                default:
+                    System.out.println("Opción inválida.");
+            }
+        } while(option != 0);
+        
+        scanner.close();
+    }
+    
+    private void cargarVoluntarios() {
+        System.out.print("Ingrese el nombre del archivo Excel (ej: voluntarios.xlsx): ");
+        String nombreArchivo = scanner.nextLine();
+        manager.cargarVoluntariosDesdeExcel(nombreArchivo);
+    }
+    
+    private void eliminarVoluntario() {
+        System.out.print("Ingrese el RUT del voluntario a eliminar: ");
+        String rutEliminar = scanner.nextLine();
+        manager.eliminarVoluntario(rutEliminar);
+    }
+    
+    private void mostrarOrganizaciones() {
+        int suboption;
+        do {
+            System.out.println("\n--- Organizaciones ---");
+            System.out.println("1. Mostrar proyectos");
+            System.out.println("2. Denominar catástrofe");
+            System.out.println("0. Volver");
+            System.out.print("Seleccione una opción: ");
+            suboption = scanner.nextInt();
+            scanner.nextLine();
+
+            switch(suboption) {
+                case 1:
+                    System.out.println("Mostrando proyectos...");
+                    break;
+                case 2:
+                    System.out.println("Función en desarrollo...");
+                    break;
+                case 0:
+                    break;
+                default:
+                    System.out.println("Opción inválida.");
+            }
+        } while(suboption != 0);
+    }
+}
+
+class VolunteerManager {
+    private Voluntario[] voluntarios;
+    private int cantidad_voluntarios;
+    private Organization[] organizaciones;
+    private int cantidad_organizaciones;
+    
+    public VolunteerManager() {
+        this.voluntarios = new Voluntario[100];
+        this.cantidad_voluntarios = 0;
+        this.organizaciones = new Organization[10];
+        this.cantidad_organizaciones = 0;
+    }
+    
+    public void mostrarVoluntarios() {
+        System.out.println("\n=== VOLUNTARIOS CARGADOS ===");
+        if (cantidad_voluntarios == 0) {
+            System.out.println("No hay voluntarios cargados.");
+        } else {
+            for(int i = 0; i < cantidad_voluntarios; i++){
+                voluntarios[i].show();
+                System.out.println("---");
+            }
+        }
+    }
+    
+    public void eliminarVoluntario(String rutEliminar) {
+        int rutBuscar;
+        try {
+            rutBuscar = Integer.parseInt(rutEliminar.replaceAll("[^0-9]", ""));
+        } catch (NumberFormatException e) {
+            System.out.println("ERROR: RUT inválido para eliminación.");
+            return;
+        }
+    
+        for (int i = 0; i < cantidad_voluntarios; i++) {
+            if (voluntarios[i].get_rut() == rutBuscar) {
+                for (int j = i; j < cantidad_voluntarios - 1; j++) {
+                    voluntarios[j] = voluntarios[j + 1];
+                }
+                voluntarios[cantidad_voluntarios - 1] = null;
+                cantidad_voluntarios--;
+                System.out.println("Voluntario eliminado exitosamente.");
+                return;
+            }
+        }
+        System.out.println("No se encontró voluntario con ese RUT.");
+    }
+    
+    public void cargarVoluntariosDesdeExcel(String nombreArchivo) {
+        try {
+            FileInputStream file = new FileInputStream(nombreArchivo);
+            Workbook workbook = new XSSFWorkbook(file);
+            Sheet sheet = workbook.getSheetAt(0);
+            
+            int voluntariosLeidos = 0;
+            cantidad_voluntarios = 0;
+            
+            System.out.println("Cargando voluntarios desde " + nombreArchivo + "...");
+            
+            for (int i = 1; i <= sheet.getLastRowNum() && voluntariosLeidos < voluntarios.length; i++) {
+                Row row = sheet.getRow(i);
+                if (row == null) continue;
+                
+                try {
+                    String nombre = getCellValueAsString(row.getCell(0));
+                    String rut = getCellValueAsString(row.getCell(1));
+                    double fisico = getCellValueAsDouble(row.getCell(2));
+                    double social = getCellValueAsDouble(row.getCell(3));
+                    double eficiencia = getCellValueAsDouble(row.getCell(4));
+                    
+                    if (nombre.isEmpty() || rut.isEmpty()) {
+                        System.out.println("Saltando fila " + (i + 1) + ": datos básicos incompletos");
+                        continue;
+                    }
+                    
+                    Boolean[] disponibilidad = new Boolean[21];
+                    for (int j = 0; j < 21; j++) {
+                        Cell cell = row.getCell(5 + j);
+                        disponibilidad[j] = getCellValueAsBoolean(cell);
+                    }
+                    
+                    Stats stats = new Stats(fisico, social, eficiencia);
+                    WeeklySchedule schedule = new WeeklySchedule(
+                        disponibilidad[0], disponibilidad[1], disponibilidad[2],
+                        disponibilidad[3], disponibilidad[4], disponibilidad[5],
+                        disponibilidad[6], disponibilidad[7], disponibilidad[8],
+                        disponibilidad[9], disponibilidad[10], disponibilidad[11],
+                        disponibilidad[12], disponibilidad[13], disponibilidad[14],
+                        disponibilidad[15], disponibilidad[16], disponibilidad[17],
+                        disponibilidad[18], disponibilidad[19], disponibilidad[20]
+                    );
+                    
+                    Voluntario nuevoVoluntario = new Voluntario(nombre, rut, stats, schedule);
+                    
+                    if (nuevoVoluntario.is_valid()) {
+                        voluntarios[cantidad_voluntarios] = nuevoVoluntario;
+                        cantidad_voluntarios++;
+                        voluntariosLeidos++;
+                        System.out.println("✓ Cargado: " + nombre + " (RUT: " + nuevoVoluntario.get_rut() + ")");
+                    } else {
+                        System.out.println("✗ Error en fila " + (i + 1) + ": voluntario inválido - " + nombre);
+                    }
+                    
+                } catch (Exception e) {
+                    System.out.println("✗ Error procesando fila " + (i + 1) + ": " + e.getMessage());
+                }
+            }
+            
+            workbook.close();
+            file.close();
+            
+            System.out.println("\n=== RESUMEN DE CARGA ===");
+            System.out.println("Voluntarios cargados exitosamente: " + voluntariosLeidos);
+            System.out.println("Total de voluntarios en sistema: " + cantidad_voluntarios);
+            
+        } catch (IOException e) {
+            System.out.println("ERROR: No se pudo leer el archivo " + nombreArchivo);
+            System.out.println("Verifique que el archivo existe y está en el directorio correcto");
+            System.out.println("Error detallado: " + e.getMessage());
+        }
+    }
+    
+    private String getCellValueAsString(Cell cell) {
+    if (cell == null) return "";
+    
+    try {
+        switch (cell.getCellType()) {
+            case Cell.CELL_TYPE_STRING:
+                return cell.getStringCellValue().trim();
+            case Cell.CELL_TYPE_NUMERIC:
+                if (DateUtil.isCellDateFormatted(cell)) {
+                    return cell.getDateCellValue().toString();
+                } else {
+                    double numValue = cell.getNumericCellValue();
+                    if (numValue == (long) numValue) {
+                        return String.valueOf((long) numValue);
+                    } else {
+                        return String.valueOf(numValue);
+                    }
+                }
+            case Cell.CELL_TYPE_BOOLEAN:
+                return String.valueOf(cell.getBooleanCellValue());
+            case Cell.CELL_TYPE_FORMULA:
+                try {
+                    return cell.getStringCellValue().trim();
+                } catch (Exception e) {
+                    try {
+                        return String.valueOf((long) cell.getNumericCellValue());
+                    } catch (Exception e2) {
+                        return "";
+                    }
+                }
+            case Cell.CELL_TYPE_BLANK:
+                return "";
+            default:
+                return "";
+        }
+    } catch (Exception e) {
+        return "";
+    }
+}
+
+private double getCellValueAsDouble(Cell cell) {
+    if (cell == null) return 0.0;
+    
+    try {
+        switch (cell.getCellType()) {
+            case Cell.CELL_TYPE_NUMERIC:
+                return cell.getNumericCellValue();
+            case Cell.CELL_TYPE_STRING:
+                String strValue = cell.getStringCellValue().trim();
+                if (strValue.isEmpty()) return 0.0;
+                try {
+                    return Double.parseDouble(strValue);
+                } catch (NumberFormatException e) {
+                    return 0.0;
+                }
+            case Cell.CELL_TYPE_BOOLEAN:
+                return cell.getBooleanCellValue() ? 1.0 : 0.0;
+            case Cell.CELL_TYPE_FORMULA:
+                try {
+                    return cell.getNumericCellValue();
+                } catch (Exception e) {
+                    return 0.0;
+                }
+            case Cell.CELL_TYPE_BLANK:
+                return 0.0;
+            default:
+                return 0.0;
+        }
+    } catch (Exception e) {
+        return 0.0;
+    }
+}
+
+private Boolean getCellValueAsBoolean(Cell cell) {
+    if (cell == null) return false;
+    
+    try {
+        switch (cell.getCellType()) {
+            case Cell.CELL_TYPE_BOOLEAN:
+                return cell.getBooleanCellValue();
+            case Cell.CELL_TYPE_STRING:
+                String value = cell.getStringCellValue().trim().toUpperCase();
+                return value.equals("TRUE") || value.equals("1") || 
+                       value.equals("SI") || value.equals("SÍ") || 
+                       value.equals("YES") || value.equals("Y");
+            case Cell.CELL_TYPE_NUMERIC:
+                return cell.getNumericCellValue() != 0;
+            case Cell.CELL_TYPE_FORMULA:
+                try {
+                    return cell.getBooleanCellValue();
+                } catch (Exception e) {
+                    try {
+                        return cell.getNumericCellValue() != 0;
+                    } catch (Exception e2) {
+                        return false;
+                    }
+                }
+            case Cell.CELL_TYPE_BLANK:
+                return false;
+            default:
+                return false;
+        }
+    } catch (Exception e) {
+        return false;
+    }
+}
+    
+    
+    public Voluntario[] getVoluntarios() { return voluntarios; }
+    public int getCantidadVoluntarios() { return cantidad_voluntarios; }
+    public Organization[] getOrganizaciones() { return organizaciones; }
+    public int getCantidadOrganizaciones() { return cantidad_organizaciones; }
 }
