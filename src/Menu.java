@@ -24,37 +24,40 @@ public class Menu {
         do {
             System.out.println("\n--- Menú Principal ---");
             System.out.println("1. Agregar voluntarios (desde Excel)");
-            System.out.println("2. Asignar voluntarios a proyecto");
-            System.out.println("3. Eliminar voluntario (por RUT)");
-            System.out.println("4. Mostrar organizaciones");
-            System.out.println("5. Asignación de emergencia");
-            System.out.println("6. Mostrar voluntarios cargados");
-            System.out.println("7. Cargar organizaciones.");
+            System.out.println("2. Agregar voluntario manualmente");
+            System.out.println("3. Asignar voluntarios a proyecto");
+            System.out.println("4. Eliminar voluntario (por RUT)");
+            System.out.println("5. Mostrar organizaciones");
+            System.out.println("6. Asignación de emergencia");
+            System.out.println("7. Mostrar voluntarios cargados");
+            System.out.println("8. Cargar organizaciones");
             System.out.println("0. Salir");
             System.out.print("Seleccione una opción: ");
             option = scanner.nextInt();
             scanner.nextLine();
-
             switch(option) {
                 case 1:
                     loadVolunteers();
                     break;
                 case 2:
-                    assignVolunteers();
+                    addVolunteerManually();
                     break;
                 case 3:
-                    deleteVolunteer();
+                    assignVolunteers();
                     break;
                 case 4:
-                    showOrganizations();
+                    deleteVolunteer();
                     break;
                 case 5:
-                    System.out.println("Función en desarrollo...");
+                    showOrganizations();
                     break;
                 case 6:
-                    manager.showVolunteers();
+                    System.out.println("Función en desarrollo...");
                     break;
                 case 7:
+                    manager.showVolunteers();
+                    break;
+                case 8:
                     loadOrganizations();
                     break;
                 case 0:
@@ -64,9 +67,8 @@ public class Menu {
                     System.out.println("Opción inválida.");
             }
         } while(option != 0);
-        
-        scanner.close();
-    }
+    scanner.close();
+}
     
     private void loadVolunteers() {
         System.out.print("Ingrese el nombre del archivo Excel (ej: voluntarios.xlsx): ");
@@ -125,5 +127,9 @@ public class Menu {
     }
     
     manager.assignVolunteersAutomatically();
+    
+}
+    private void addVolunteerManually() {
+    manager.addVolunteerManually(scanner);
 }
 }

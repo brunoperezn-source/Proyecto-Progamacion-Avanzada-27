@@ -19,11 +19,20 @@ public class Stats{
     }
     
     public void set_physical(double physical){ this.physical = physical; }
+    public void set_physical(int physical){ 
+    this.physical = (double) physical; 
+    }
     public double get_physical(){ return this.physical; }
     
     public void set_social(double social){ this.social = social; }
+    public void set_social(int social){ 
+    this.social = (double) social; 
+    }
     public double get_social(){ return this.social; }
     
     public void set_efficiency(double efficiency){ this.efficiency = efficiency; }
+    public void set_efficiency(int efficiency){ 
+    this.efficiency = (double) efficiency; 
+    }
     public double get_efficiency(){ return this.efficiency; }
 }

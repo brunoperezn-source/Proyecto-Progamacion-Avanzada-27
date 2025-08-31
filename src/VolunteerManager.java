@@ -9,6 +9,7 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import java.util.Scanner;
 
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
@@ -426,6 +427,131 @@ public class VolunteerManager {
                 if (mejorProyecto != null) {
                     System.out.printf("%s asignado a %s\n", voluntarios[i].getNombre(), mejorProyecto.getNombre());
                 }
+            }
+        }
+    }
+    public void addVolunteerManually(Scanner scanner) {
+        if (cantidad_voluntarios >= voluntarios.length) {
+            System.out.println("ERROR: Se alcanzó el límite máximo de voluntarios (" + voluntarios.length + ")");
+            return;
+        }
+
+        System.out.println("\n=== AGREGAR VOLUNTARIO MANUALMENTE ===");
+
+        
+        System.out.print("Ingrese el nombre completo del voluntario: ");
+        String nombre = scanner.nextLine().trim();
+
+        if (nombre.isEmpty()) {
+            System.out.println("ERROR: El nombre no puede estar vacío.");
+            return;
+        }
+
+        System.out.print("Ingrese el RUT del voluntario (ej: 12345678-9): ");
+        String rut = scanner.nextLine().trim();
+
+        if (rut.isEmpty()) {
+            System.out.println("ERROR: El RUT no puede estar vacío.");
+            return;
+        }
+
+        
+        try {
+            int rutNumerico = Integer.parseInt(rut.replaceAll("[^0-9]", ""));
+            for (int i = 0; i < cantidad_voluntarios; i++) {
+                if (voluntarios[i].get_rut() == rutNumerico) {
+                    System.out.println("ERROR: Ya existe un voluntario con ese RUT.");
+                    return;
+                }
+            }
+        } catch (NumberFormatException e) {
+            System.out.println("ERROR: Formato de RUT inválido.");
+            return;
+        }
+
+        
+        System.out.println("\n--- Estadísticas del Voluntario ---");
+
+        double fisico = statCheck(scanner, "física", 0.0, 10.0);
+        if (fisico == -1) return; // Error en la entrada
+
+        double social = statCheck(scanner, "social", 0.0, 10.0);
+        if (social == -1) return; // Error en la entrada
+
+        double eficiencia = statCheck(scanner, "eficiencia", 0.0, 10.0);
+        if (eficiencia == -1) return; // Error en la entrada
+
+        
+        Stats stats = new Stats(fisico, social, eficiencia);
+
+        
+        System.out.println("\n--- Disponibilidad Horaria ---");
+        System.out.println("Para cada franja horaria, ingrese 'S' para SÍ o 'N' para NO:");
+
+        String[] diasSemana = {"Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"};
+        String[] franjas = {"Mañana (8-12)", "Tarde (12-18)", "Noche (18-22)"};
+
+        Boolean[] disponibilidad = new Boolean[21];
+        int index = 0;
+
+        for (int dia = 0; dia < 7; dia++) {
+            System.out.println("\n" + diasSemana[dia] + ":");
+            for (int franja = 0; franja < 3; franja++) {
+                System.out.print("  " + franjas[franja] + " (S/N): ");
+                String respuesta = scanner.nextLine().trim().toUpperCase();
+
+                while (!respuesta.equals("S") && !respuesta.equals("N")) {
+                    System.out.print("  Respuesta inválida. Ingrese 'S' para SÍ o 'N' para NO: ");
+                    respuesta = scanner.nextLine().trim().toUpperCase();
+                }
+
+                disponibilidad[index] = respuesta.equals("S");
+                index++;
+            }
+        }
+
+        
+        WeeklySchedule schedule = new WeeklySchedule(
+            disponibilidad[0], disponibilidad[1], disponibilidad[2],    
+            disponibilidad[3], disponibilidad[4], disponibilidad[5],    
+            disponibilidad[6], disponibilidad[7], disponibilidad[8],    
+            disponibilidad[9], disponibilidad[10], disponibilidad[11],  
+            disponibilidad[12], disponibilidad[13], disponibilidad[14], 
+            disponibilidad[15], disponibilidad[16], disponibilidad[17], 
+            disponibilidad[18], disponibilidad[19], disponibilidad[20]  
+        );
+
+
+        Volunteer nuevoVoluntario = new Volunteer(nombre, rut, stats, schedule);
+
+
+        if (nuevoVoluntario.is_valid()) {
+            voluntarios[cantidad_voluntarios] = nuevoVoluntario;
+            cantidad_voluntarios++;
+
+            System.out.println("\n✓ VOLUNTARIO AGREGADO EXITOSAMENTE");
+            System.out.println("Nombre: " + nombre);
+            System.out.println("RUT: " + nuevoVoluntario.get_rut());
+            System.out.println("Estadísticas - Físico: " + fisico + ", Social: " + social + ", Eficiencia: " + eficiencia);
+            System.out.println("Total de voluntarios en sistema: " + cantidad_voluntarios);
+        } else {
+            System.out.println("ERROR: Los datos del voluntario no son válidos.");
+        }
+    }
+        private double statCheck(Scanner scanner, String tipoStat, double min, double max) {
+        while (true) {
+            try {
+                System.out.printf("Ingrese la habilidad %s (%.1f - %.1f): ", tipoStat, min, max);
+                double valor = Double.parseDouble(scanner.nextLine().trim());
+
+                if (valor < min || valor > max) {
+                    System.out.printf("ERROR: El valor debe estar entre %.1f y %.1f\n", min, max);
+                    continue;
+                }
+
+                return valor;
+            } catch (NumberFormatException e) {
+                System.out.println("ERROR: Ingrese un número válido.");
             }
         }
     }
