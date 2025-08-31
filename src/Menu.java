@@ -131,5 +131,21 @@ public class Menu {
 }
     private void addVolunteerManually() {
     manager.addVolunteerManually(scanner);
+    }
+    public Scanner getScanner() {
+    return this.scanner;
 }
+
+    public VolunteerManager getManager() {
+    return this.manager;
+    }
+
+
+    public void setScanner(Scanner scanner) {
+        this.scanner = scanner;
+    }
+
+    public void setManager(VolunteerManager manager) {
+        this.manager = manager;
+    }
 }

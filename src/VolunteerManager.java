@@ -425,7 +425,7 @@ public class VolunteerManager {
                 }
 
                 if (mejorProyecto != null) {
-                    System.out.printf("%s asignado a %s\n", voluntarios[i].getNombre(), mejorProyecto.getNombre());
+                    System.out.printf("%s asignado a %s\n", voluntarios[i].get_name(), mejorProyecto.getNombre());
                 }
             }
         }
@@ -554,5 +554,27 @@ public class VolunteerManager {
                 System.out.println("ERROR: Ingrese un número válido.");
             }
         }
+    }
+    public Volunteering getVolunteering() {
+    return this.volunteering;
+    }
+    public void setVoluntarios(Volunteer[] voluntarios) {
+    this.voluntarios = voluntarios;
+    }
+
+    public void setCantidadVoluntarios(int cantidad_voluntarios) {
+        this.cantidad_voluntarios = cantidad_voluntarios;
+    }
+
+    public void setOrganizaciones(Organization[] organizaciones) {
+        this.organizaciones = organizaciones;
+    }
+
+    public void setCantidadOrganizaciones(int cantidad_organizaciones) {
+        this.cantidad_organizaciones = cantidad_organizaciones;
+    }
+
+    public void setVolunteering(Volunteering volunteering) {
+        this.volunteering = volunteering;
     }
 }

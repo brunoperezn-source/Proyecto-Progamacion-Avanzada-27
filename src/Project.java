@@ -40,4 +40,19 @@ public class Project {
     public void setNivelCatastrofe(int nivelCatastrofe) {
         this.nivelCatastrofe = nivelCatastrofe;
     }
+    public void setNombre(String nombre) {
+    this.nombre = nombre;
+    }
+
+    public void setFisico(int fisico) {
+        this.fisico = fisico;
+    }
+
+    public void setSocial(int social) {
+        this.social = social;
+    }
+
+    public void setEficiencia(int eficiencia) {
+        this.eficiencia = eficiencia;
+    }
 }

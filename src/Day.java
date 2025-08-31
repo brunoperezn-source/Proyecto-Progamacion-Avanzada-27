@@ -36,4 +36,14 @@ public class Day{
     public Time.DayOfWeek get_name(){
         return this.name;
     }
+    public Boolean[] get_availability() {
+    return this.availability; 
+    }
+    public Boolean get_availability(Time.TimeOfDay time) {
+    return this.availability[time.ordinal()];
+    }
+
+    public void set_name(Time.DayOfWeek name) {
+    this.name = name;
+    }
 }

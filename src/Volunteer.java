@@ -66,7 +66,13 @@ public class Volunteer {
     public Boolean is_valid(){
         return !(this.rut == -1 && this.name.equals(""));
     }
-    public String getNombre() { 
+    public String get_name() { 
     return this.name; 
+    }
+    public WeeklySchedule get_availability() {
+    return this.availability;
+    }
+    public void set_stats(Stats new_stats) {
+    this.skills = new_stats;
     }
 }

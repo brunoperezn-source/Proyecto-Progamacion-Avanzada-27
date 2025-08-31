@@ -87,4 +87,24 @@ public class WeeklySchedule{
         
         day_to_set.set_availability_all(morning, midday, evening);
     }
+    public Day[] getDays() {
+    return this.days;
+    }
+    public void setDays(Day[] days) {
+    this.days = days;
+    }
+    public Boolean get_availability(Time.DayOfWeek day, Time.TimeOfDay time) {
+    Day target_day = get_day(day);
+    if (target_day == null) {
+        return false;
+    }
+    return target_day.get_availability(time);
+    }
+    public void set_availability(Time.DayOfWeek day, Time.TimeOfDay time, Boolean value) {
+    Day target_day = get_day(day);
+    if (target_day != null) {
+        target_day.set_availability(time, value);
+        }
+    }
+
 }

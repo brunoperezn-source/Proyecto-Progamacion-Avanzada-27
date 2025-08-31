@@ -101,4 +101,18 @@ public class Volunteering {
             this.score = score;
         }
     }
+    public HashMap<Integer, Volunteer> getPossibleVolunteers() {
+    return this.possible_volunteers;
+    }
+
+    public HashMap<Integer, Volunteer> getEligibleVolunteers() {
+        return this.eligible_volunteers;
+    }
+    public void setPossibleVolunteers(HashMap<Integer, Volunteer> possible_volunteers) {
+    this.possible_volunteers = possible_volunteers;
+    }
+
+    public void setEligibleVolunteers(HashMap<Integer, Volunteer> eligible_volunteers) {
+        this.eligible_volunteers = eligible_volunteers;
+    }
 }
