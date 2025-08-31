@@ -387,6 +387,7 @@ class Menu {
             System.out.println("4. Mostrar organizaciones");
             System.out.println("5. Asignación de emergencia");
             System.out.println("6. Mostrar voluntarios cargados");
+            System.out.println("7. Cargar organizaciones.");
             System.out.println("0. Salir");
             System.out.print("Seleccione una opción: ");
             option = scanner.nextInt();
@@ -397,19 +398,22 @@ class Menu {
                     cargarVoluntarios();
                     break;
                 case 2:
-                    System.out.println("Función en desarrollo...");
+                    asignarVoluntarios();
                     break;
                 case 3:
                     eliminarVoluntario();
                     break;
                 case 4:
-                    mostrarOrganizaciones();
+                    mostrarOrganizacionesCompletas();
                     break;
                 case 5:
                     System.out.println("Función en desarrollo...");
                     break;
                 case 6:
                     manager.mostrarVoluntarios();
+                    break;
+                case 7:
+                    cargarOrganizaciones();
                     break;
                 case 0:
                     System.out.println("Saliendo...");
@@ -434,31 +438,52 @@ class Menu {
         manager.eliminarVoluntario(rutEliminar);
     }
     
-    private void mostrarOrganizaciones() {
-        int suboption;
-        do {
-            System.out.println("\n--- Organizaciones ---");
-            System.out.println("1. Mostrar proyectos");
-            System.out.println("2. Denominar catástrofe");
-            System.out.println("0. Volver");
-            System.out.print("Seleccione una opción: ");
-            suboption = scanner.nextInt();
-            scanner.nextLine();
-
-            switch(suboption) {
-                case 1:
-                    System.out.println("Mostrando proyectos...");
-                    break;
-                case 2:
-                    System.out.println("Función en desarrollo...");
-                    break;
-                case 0:
-                    break;
-                default:
-                    System.out.println("Opción inválida.");
-            }
-        } while(suboption != 0);
+    private void mostrarOrganizacionesCompletas() {
+    int suboption;
+    do {
+        System.out.println("\n--- Organizaciones ---");
+        System.out.println("1. Mostrar proyectos");
+        System.out.println("2. Denominar catástrofe");
+        System.out.println("3. Mostrar todas las organizaciones");
+        System.out.println("0. Volver");
+        System.out.print("Seleccione una opción: ");
+        suboption = scanner.nextInt();
+        scanner.nextLine();
+        switch(suboption) {
+            case 1:
+                manager.mostrarOrganizacionesCompletas();
+                break;
+            case 2:
+                System.out.println("Función en desarrollo...");
+                break;
+            case 3:
+                manager.mostrarOrganizacionesCompletas();
+                break;
+            case 0:
+                break;
+            default:
+                System.out.println("Opción inválida.");
+        }
+    } while(suboption != 0);
+}
+    private void cargarOrganizaciones() {
+        System.out.print("Ingrese el nombre del archivo Excel con organizaciones (ej: organizaciones.xlsx): ");
+        String nombreArchivo = scanner.nextLine();
+        manager.cargarOrganizacionesDesdeExcel(nombreArchivo);
     }
+    private void asignarVoluntarios() {
+    if (manager.getCantidadVoluntarios() == 0) {
+        System.out.println("No hay voluntarios cargados.");
+        return;
+    }
+    
+    if (manager.getCantidadOrganizaciones() == 0) {
+        System.out.println("No hay organizaciones cargadas.");
+        return;
+    }
+    
+    manager.asignarVoluntariosAutomaticamente();
+}
 }
 
 class VolunteerManager {
@@ -466,12 +491,14 @@ class VolunteerManager {
     private int cantidad_voluntarios;
     private Organization[] organizaciones;
     private int cantidad_organizaciones;
+    private Volunteering volunteering;
     
     public VolunteerManager() {
         this.voluntarios = new Voluntario[100];
         this.cantidad_voluntarios = 0;
         this.organizaciones = new Organization[10];
         this.cantidad_organizaciones = 0;
+        this.volunteering = new Volunteering();
     }
     
     public void mostrarVoluntarios() {
@@ -583,6 +610,145 @@ class VolunteerManager {
         }
     }
     
+    public void cargarOrganizacionesDesdeExcel(String nombreArchivo) {
+    try {
+        FileInputStream file = new FileInputStream(nombreArchivo);
+        Workbook workbook = new XSSFWorkbook(file);
+        Sheet sheet = workbook.getSheetAt(0); 
+       
+        HashMap<String, ArrayList<Project>> organizacionesTemp = new HashMap<>();
+        
+        int proyectosLeidos = 0;
+        
+        System.out.println("Cargando organizaciones y proyectos desde " + nombreArchivo + "...");
+        
+        
+        for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+            Row row = sheet.getRow(i);
+            if (row == null) continue;
+            
+            try {
+                
+                String nombreOrganizacion = getCellValueAsString(row.getCell(0)); 
+                String nombreProyecto = getCellValueAsString(row.getCell(1));     
+                int nivelFisico = (int) getCellValueAsDouble(row.getCell(2));    
+                int nivelSocial = (int) getCellValueAsDouble(row.getCell(3));     
+                int nivelEficiencia = (int) getCellValueAsDouble(row.getCell(4)); 
+                int nivelCatastrofe = (int) getCellValueAsDouble(row.getCell(5)); 
+                
+                
+                if (nombreOrganizacion.isEmpty() || nombreProyecto.isEmpty()) {
+                    System.out.println("Saltando fila " + (i + 1) + ": datos básicos incompletos");
+                    continue;
+                }
+                
+                
+                if (nivelFisico < 0 || nivelSocial < 0 || nivelEficiencia < 0 || nivelCatastrofe < 0) {
+                    System.out.println("Saltando fila " + (i + 1) + ": niveles no pueden ser negativos");
+                    continue;
+                }
+                
+                
+                Project nuevoProyecto = new Project(nombreProyecto, nivelFisico, nivelSocial, 
+                                                   nivelEficiencia, nivelCatastrofe);
+                
+                
+                if (!organizacionesTemp.containsKey(nombreOrganizacion)) {
+                    organizacionesTemp.put(nombreOrganizacion, new ArrayList<Project>());
+                }
+                organizacionesTemp.get(nombreOrganizacion).add(nuevoProyecto);
+                proyectosLeidos++;
+                
+                System.out.println("✓ Cargado proyecto: " + nombreProyecto + 
+                                 " de " + nombreOrganizacion + 
+                                 " (F:" + nivelFisico + 
+                                 " S:" + nivelSocial + 
+                                 " E:" + nivelEficiencia + 
+                                 " C:" + nivelCatastrofe + ")");
+                
+            } catch (Exception e) {
+                System.out.println("✗ Error procesando fila " + (i + 1) + ": " + e.getMessage());
+            }
+        }
+        
+        
+        cantidad_organizaciones = 0;
+        for (String nombreOrg : organizacionesTemp.keySet()) {
+            if (cantidad_organizaciones >= organizaciones.length) {
+                System.out.println("Advertencia: Se alcanzó el límite máximo de organizaciones (" + 
+                                 organizaciones.length + ")");
+                break;
+            }
+            
+            ArrayList<Project> proyectosOrg = organizacionesTemp.get(nombreOrg);
+            Organization nuevaOrganizacion = new Organization(nombreOrg, proyectosOrg.size());
+            
+            
+            for (int j = 0; j < proyectosOrg.size(); j++) {
+                nuevaOrganizacion.setProyecto(j, proyectosOrg.get(j));
+            }
+            
+            organizaciones[cantidad_organizaciones] = nuevaOrganizacion;
+            cantidad_organizaciones++;
+        }
+        
+        workbook.close();
+        file.close();
+        
+        System.out.println("\n=== RESUMEN DE CARGA ===");
+        System.out.println("Proyectos cargados exitosamente: " + proyectosLeidos);
+        System.out.println("Organizaciones creadas: " + cantidad_organizaciones);
+        System.out.println("Total de organizaciones en sistema: " + cantidad_organizaciones);
+        
+    } catch (IOException e) {
+        System.out.println("ERROR: No se pudo leer el archivo " + nombreArchivo);
+        System.out.println("Verifique que el archivo existe y está en el directorio correcto");
+        System.out.println("Error detallado: " + e.getMessage());
+    }
+    }
+    public void mostrarOrganizacionesCompletas() {
+    System.out.println("\n=== ORGANIZACIONES Y PROYECTOS ===");
+    if (cantidad_organizaciones == 0) {
+        System.out.println("No hay organizaciones cargadas.");
+        return;
+    }
+    
+    for (int i = 0; i < cantidad_organizaciones; i++) {
+        Organization org = organizaciones[i];
+        System.out.println("\n🏢 ORGANIZACIÓN: " + org.getNombre());
+        System.out.println("   Proyectos:");
+        
+        Project[] proyectos = org.getProyectos();
+        for (int j = 0; j < proyectos.length; j++) {
+            if (proyectos[j] != null) {
+                Project p = proyectos[j];
+                System.out.printf("   📋 %s - Físico:%d Social:%d Eficiencia:%d Catástrofe:%d%n",
+                    p.getNombre(), p.getFisico(), p.getSocial(), 
+                    p.getEficiencia(), p.getNivelCatastrofe());
+            }
+        }
+    }
+}
+    public Organization buscarOrganizacion(String nombreOrganizacion) {
+    for (int i = 0; i < cantidad_organizaciones; i++) {
+        if (organizaciones[i].getNombre().equalsIgnoreCase(nombreOrganizacion.trim())) {
+            return organizaciones[i];
+        }
+    }
+    return null;
+}
+    public Project buscarProyecto(String nombreProyecto) {
+    for (int i = 0; i < cantidad_organizaciones; i++) {
+        Project[] proyectos = organizaciones[i].getProyectos();
+        for (int j = 0; j < proyectos.length; j++) {
+            if (proyectos[j] != null && 
+                proyectos[j].getNombre().equalsIgnoreCase(nombreProyecto.trim())) {
+                return proyectos[j];
+            }
+        }
+    }
+    return null;
+}
     private String getCellValueAsString(Cell cell) {
     if (cell == null) return "";
     
@@ -623,76 +789,111 @@ class VolunteerManager {
     }
 }
 
-private double getCellValueAsDouble(Cell cell) {
-    if (cell == null) return 0.0;
+    private double getCellValueAsDouble(Cell cell) {
+        if (cell == null) return 0.0;
     
-    try {
-        switch (cell.getCellType()) {
-            case Cell.CELL_TYPE_NUMERIC:
-                return cell.getNumericCellValue();
-            case Cell.CELL_TYPE_STRING:
-                String strValue = cell.getStringCellValue().trim();
-                if (strValue.isEmpty()) return 0.0;
-                try {
-                    return Double.parseDouble(strValue);
-                } catch (NumberFormatException e) {
-                    return 0.0;
-                }
-            case Cell.CELL_TYPE_BOOLEAN:
-                return cell.getBooleanCellValue() ? 1.0 : 0.0;
-            case Cell.CELL_TYPE_FORMULA:
-                try {
+        try {
+            switch (cell.getCellType()) {
+                case Cell.CELL_TYPE_NUMERIC:
                     return cell.getNumericCellValue();
-                } catch (Exception e) {
+             case Cell.CELL_TYPE_STRING:
+                    String strValue = cell.getStringCellValue().trim();
+                    if (strValue.isEmpty()) return 0.0;
+                    try {
+                        return Double.parseDouble(strValue);
+                    } catch (NumberFormatException e) {
+                        return 0.0;
+                    }
+                case Cell.CELL_TYPE_BOOLEAN:
+                    return cell.getBooleanCellValue() ? 1.0 : 0.0;
+                case Cell.CELL_TYPE_FORMULA:
+                    try {
+                        return cell.getNumericCellValue();
+                    } catch (Exception e) {
+                        return 0.0;
+                    }
+                case Cell.CELL_TYPE_BLANK:
                     return 0.0;
-                }
-            case Cell.CELL_TYPE_BLANK:
-                return 0.0;
-            default:
-                return 0.0;
-        }
-    } catch (Exception e) {
+                default:
+                    return 0.0;
+            }
+        } catch (Exception e) {
         return 0.0;
     }
 }
 
-private Boolean getCellValueAsBoolean(Cell cell) {
-    if (cell == null) return false;
+    private Boolean getCellValueAsBoolean(Cell cell) {
+        if (cell == null) return false;
     
-    try {
-        switch (cell.getCellType()) {
-            case Cell.CELL_TYPE_BOOLEAN:
-                return cell.getBooleanCellValue();
-            case Cell.CELL_TYPE_STRING:
-                String value = cell.getStringCellValue().trim().toUpperCase();
-                return value.equals("TRUE") || value.equals("1") || 
+        try {
+            switch (cell.getCellType()) {
+                case Cell.CELL_TYPE_BOOLEAN:
+                    return cell.getBooleanCellValue();
+                case Cell.CELL_TYPE_STRING:
+                    String value = cell.getStringCellValue().trim().toUpperCase();
+                    return value.equals("TRUE") || value.equals("1") || 
                        value.equals("SI") || value.equals("SÍ") || 
                        value.equals("YES") || value.equals("Y");
-            case Cell.CELL_TYPE_NUMERIC:
-                return cell.getNumericCellValue() != 0;
-            case Cell.CELL_TYPE_FORMULA:
-                try {
-                    return cell.getBooleanCellValue();
-                } catch (Exception e) {
+                case Cell.CELL_TYPE_NUMERIC:
+                    return cell.getNumericCellValue() != 0;
+                case Cell.CELL_TYPE_FORMULA:
                     try {
-                        return cell.getNumericCellValue() != 0;
-                    } catch (Exception e2) {
-                        return false;
+                        return cell.getBooleanCellValue();
+                    } catch (Exception e) {
+                        try {
+                            return cell.getNumericCellValue() != 0;
+                        } catch (Exception e2) {
+                            return false;
+                        }
                     }
-                }
-            case Cell.CELL_TYPE_BLANK:
-                return false;
-            default:
-                return false;
-        }
-    } catch (Exception e) {
-        return false;
+                case Cell.CELL_TYPE_BLANK:
+                    return false;
+                default:
+                    return false;
+            }
+        } catch (Exception e) {
+            return false;
     }
 }
-    
-    
     public Voluntario[] getVoluntarios() { return voluntarios; }
     public int getCantidadVoluntarios() { return cantidad_voluntarios; }
     public Organization[] getOrganizaciones() { return organizaciones; }
     public int getCantidadOrganizaciones() { return cantidad_organizaciones; }
+    public void asignarVoluntariosAutomaticamente() {
+        ArrayList<Project> todosLosProyectos = new ArrayList<>();
+
+        for (int i = 0; i < cantidad_organizaciones; i++) {
+            Project[] proyectos = organizaciones[i].getProyectos();
+            for (int j = 0; j < proyectos.length; j++) {
+                if (proyectos[j] != null) {
+                    todosLosProyectos.add(proyectos[j]);
+                }
+            }
+        }
+
+        for (int i = 0; i < cantidad_voluntarios; i++) {
+            if (voluntarios[i] != null) {
+                Project mejorProyecto = null;
+                double mejorCompatibilidad = 0.0;
+
+                for (Project proyecto : todosLosProyectos) {
+                    Stats volunteerStats = voluntarios[i].get_stats();
+                    if (volunteerStats.get_physical() >= proyecto.getFisico() &&
+                        volunteerStats.get_social() >= proyecto.getSocial() &&
+                        volunteerStats.get_efficiency() >= proyecto.getEficiencia()) {
+
+                        double compatibilidad = volunteering.calculateCompatibility(voluntarios[i], proyecto);
+                        if (compatibilidad > mejorCompatibilidad) {
+                            mejorCompatibilidad = compatibilidad;
+                            mejorProyecto = proyecto;
+                        }
+                    }
+                }
+
+                if (mejorProyecto != null) {
+                    System.out.printf("%s asignado a %s\n", voluntarios[i].getNombre(), mejorProyecto.getNombre());
+                }
+            }
+        }
+    }
 }
