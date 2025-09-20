@@ -112,16 +112,16 @@ public class Menu {
                     loadOrganizations();
                     break;
                 case 2:
-                    System.out.println("Función no implementada...");
+                    manager.addOrganizationManually(scanner);
                     break;
                 case 3:
-                    System.out.println("Función no implementada...");
+                    manager.deleteOrganization(scanner);
                     break;
                 case 4:
-                    System.out.println("Función no implementada...");
+                    manager.modifyOrganization(scanner);
                     break;
                 case 5:
-                    System.out.println("Función no implementada...");
+                    manager.searchOrganizationMenu(scanner);
                     break;
                 case 6:
                     manager.showOrganizations();
@@ -148,10 +148,10 @@ public class Menu {
             
             switch(option) {
                 case 1:
-                    System.out.println("Función no implementada...");
+                    manager.modifyProject(scanner);
                     break;
                 case 2:
-                    System.out.println("Función no implementada...");
+                    manager.deleteProject(scanner);
                     break;
                 case 3:
                     System.out.println("Función no implementada...");

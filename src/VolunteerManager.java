@@ -240,6 +240,169 @@ public class VolunteerManager {
         System.out.println("Error detallado: " + e.getMessage());
     }
     }
+    
+    public void addOrganizationManually(Scanner scanner) {
+    if (cantidad_organizaciones >= organizaciones.length) {
+        System.out.println("ERROR: Se alcanzó el límite máximo de organizaciones (" + organizaciones.length + ")");
+        return;
+    }
+
+    System.out.println("\n=== AGREGAR ORGANIZACIÓN MANUALMENTE ===");
+
+    System.out.print("Ingrese el nombre de la organización: ");
+    String nombreOrganizacion = scanner.nextLine().trim();
+
+    if (nombreOrganizacion.isEmpty()) {
+        System.out.println("ERROR: El nombre de la organización no puede estar vacío.");
+        return;
+    }
+
+    if (searchOrganization(nombreOrganizacion) != null) {
+        System.out.println("ERROR: Ya existe una organización con ese nombre.");
+        return;
+    }
+
+    int cantidadProyectos = 0;
+    while (true) {
+        try {
+            System.out.print("¿Cuántos proyectos tendrá esta organización? (1-20): ");
+            cantidadProyectos = Integer.parseInt(scanner.nextLine().trim());
+            
+            if (cantidadProyectos <= 0 || cantidadProyectos > 20) {
+                System.out.println("ERROR: La cantidad debe estar entre 1 y 20.");
+                continue;
+            }
+            break;
+        } catch (NumberFormatException e) {
+            System.out.println("ERROR: Ingrese un número válido.");
+        }
+    }
+
+    Organization nuevaOrganizacion = new Organization(nombreOrganizacion, cantidadProyectos);
+
+    System.out.println("\n--- Agregando Proyectos ---");
+    for (int i = 0; i < cantidadProyectos; i++) {
+        System.out.printf("\nProyecto %d/%d:\n", i + 1, cantidadProyectos);
+        
+        System.out.print("Nombre del proyecto: ");
+        String nombreProyecto = scanner.nextLine().trim();
+        
+        if (nombreProyecto.isEmpty()) {
+            System.out.println("El nombre no puede estar vacío. Intente nuevamente.");
+            i--; 
+            continue;
+        }
+
+        
+        if (searchProject(nombreProyecto) != null) {
+            System.out.println("Ya existe un proyecto con ese nombre. Intente con otro nombre.");
+            i--; 
+            continue;
+        }
+
+        int fisico = levelCheck(scanner, "físico", 0, 10);
+        if (fisico == -1) return;
+
+        int social = levelCheck(scanner, "social", 0, 10);
+        if (social == -1) return;
+
+        int eficiencia = levelCheck(scanner, "eficiencia", 0, 10);
+        if (eficiencia == -1) return;
+
+
+        Project nuevoProyecto = new Project(nombreProyecto, fisico, social, eficiencia, 0);
+        nuevaOrganizacion.setProyecto(i, nuevoProyecto);
+        
+        System.out.printf("Proyecto '%s' agregado exitosamente\n", nombreProyecto);
+    }
+    organizaciones[cantidad_organizaciones] = nuevaOrganizacion;
+    cantidad_organizaciones++;
+
+    System.out.println("\n ORGANIZACIÓN AGREGADA EXITOSAMENTE");
+    System.out.println("Nombre: " + nombreOrganizacion);
+    System.out.println("Proyectos: " + cantidadProyectos);
+    System.out.println("Total de organizaciones en sistema: " + cantidad_organizaciones);
+}
+    
+    public void deleteOrganization(Scanner scanner) {
+    if (cantidad_organizaciones == 0) {
+        System.out.println("No hay organizaciones para eliminar.");
+        return;
+    }
+
+    System.out.println("\n=== ELIMINAR ORGANIZACIÓN ===");
+    
+    System.out.println("Organizaciones disponibles:");
+    for (int i = 0; i < cantidad_organizaciones; i++) {
+        System.out.printf("%d. %s\n", i + 1, organizaciones[i].getNombre());
+    }
+
+    System.out.print("\nIngrese el nombre de la organización a eliminar: ");
+    String nombreEliminar = scanner.nextLine().trim();
+
+    if (nombreEliminar.isEmpty()) {
+        System.out.println("ERROR: El nombre no puede estar vacío.");
+        return;
+    }
+
+    for (int i = 0; i < cantidad_organizaciones; i++) {
+        if (organizaciones[i].getNombre().equalsIgnoreCase(nombreEliminar)) {
+            String nombreOrganizacion = organizaciones[i].getNombre();
+            
+            
+            System.out.printf("¿Está seguro que desea eliminar la organización '%s'? (S/N): ", nombreOrganizacion);
+            String confirmacion = scanner.nextLine().trim().toUpperCase();
+            
+            if (!confirmacion.equals("S")) {
+                System.out.println("Operación cancelada.");
+                return;
+            }
+          
+            for (int j = i; j < cantidad_organizaciones - 1; j++) {
+                organizaciones[j] = organizaciones[j + 1];
+            }
+            organizaciones[cantidad_organizaciones - 1] = null;
+            cantidad_organizaciones--;
+            
+            System.out.printf("✓ Organización '%s' eliminada exitosamente.\n", nombreOrganizacion);
+            System.out.println("Total de organizaciones restantes: " + cantidad_organizaciones);
+            return;
+        }
+    }
+    
+    System.out.println("No se encontró una organización con ese nombre.");
+}
+    
+    public void modifyOrganization(Scanner scanner) {
+    if (cantidad_organizaciones == 0) {
+        System.out.println("No hay organizaciones para modificar.");
+        return;
+    }
+
+    System.out.println("\n=== MODIFICAR NOMBRE DE ORGANIZACIÓN ===");
+    
+    System.out.println("Organizaciones disponibles:");
+    for (int i = 0; i < cantidad_organizaciones; i++) {
+        System.out.printf("%d. %s\n", i + 1, organizaciones[i].getNombre());
+    }
+
+    System.out.print("\nIngrese el nombre de la organización a modificar: ");
+    String nombreBuscar = scanner.nextLine().trim();
+
+    if (nombreBuscar.isEmpty()) {
+        System.out.println("ERROR: El nombre no puede estar vacío.");
+        return;
+    }
+
+    Organization orgEncontrada = searchOrganization(nombreBuscar);
+    if (orgEncontrada == null) {
+        System.out.println("No se encontró una organización con ese nombre.");
+        return;
+    }
+
+    modifyOrganizationName(scanner, orgEncontrada);
+}
+    
     public void showOrganizations() {
     System.out.println("\n=== ORGANIZACIONES Y PROYECTOS ===");
     if (cantidad_organizaciones == 0) {
@@ -263,6 +426,54 @@ public class VolunteerManager {
         }
     }
 }
+    
+    public void searchOrganizationMenu(Scanner scanner) {
+    System.out.println("\n=== BUSCAR ORGANIZACIONES ===");
+    
+    if (cantidad_organizaciones == 0) {
+        System.out.println("No hay organizaciones cargadas.");
+        return;
+    }
+
+    System.out.print("Ingrese el nombre de la organización a buscar: ");
+    String nombreBuscar = scanner.nextLine().trim();
+
+    if (nombreBuscar.isEmpty()) {
+        System.out.println("ERROR: El nombre no puede estar vacío.");
+        return;
+    }
+
+    Organization orgEncontrada = searchOrganization(nombreBuscar);
+    
+    if (orgEncontrada != null) {
+        System.out.println("\n ORGANIZACIÓN ENCONTRADA:");
+        System.out.println("Nombre: " + orgEncontrada.getNombre());
+        System.out.println("   Proyectos:");
+        
+        Project[] proyectos = orgEncontrada.getProyectos();
+        int proyectosEncontrados = 0;
+        
+        for (int i = 0; i < proyectos.length; i++) {
+            if (proyectos[i] != null) {
+                Project p = proyectos[i];
+                System.out.printf("    %s - F:%d S:%d E:%d C:%d%n",
+                    p.getNombre(), p.getFisico(), p.getSocial(), 
+                    p.getEficiencia(), p.getNivelCatastrofe());
+                proyectosEncontrados++;
+            }
+        }
+        
+        System.out.println("   Total de proyectos: " + proyectosEncontrados);
+    } else {
+        System.out.println("No se encontró una organización con ese nombre.");
+        
+        System.out.println("\nOrganizaciones disponibles:");
+        for (int i = 0; i < cantidad_organizaciones; i++) {
+            System.out.println("• " + organizaciones[i].getNombre());
+        }
+    }
+}
+    
     public Organization searchOrganization(String nombreOrganizacion) {
     for (int i = 0; i < cantidad_organizaciones; i++) {
         if (organizaciones[i].getNombre().equalsIgnoreCase(nombreOrganizacion.trim())) {
@@ -271,6 +482,37 @@ public class VolunteerManager {
     }
     return null;
 }
+    
+    public void modifyProject(Scanner scanner) {
+    if (cantidad_organizaciones == 0) {
+        System.out.println("No hay organizaciones cargadas.");
+        return;
+    }
+
+    System.out.println("\n=== MODIFICAR PROYECTO ===");
+    
+    System.out.println("Organizaciones disponibles:");
+    for (int i = 0; i < cantidad_organizaciones; i++) {
+        System.out.printf("%d. %s\n", i + 1, organizaciones[i].getNombre());
+    }
+
+    System.out.print("\nIngrese el nombre de la organización que contiene el proyecto: ");
+    String nombreOrg = scanner.nextLine().trim();
+
+    if (nombreOrg.isEmpty()) {
+        System.out.println("ERROR: El nombre no puede estar vacío.");
+        return;
+    }
+
+    Organization orgEncontrada = searchOrganization(nombreOrg);
+    if (orgEncontrada == null) {
+        System.out.println("No se encontró una organización con ese nombre.");
+        return;
+    }
+
+    modifyOrganizationProjects(scanner, orgEncontrada);
+}
+    
     public Project searchProject(String nombreProyecto) {
     for (int i = 0; i < cantidad_organizaciones; i++) {
         Project[] proyectos = organizaciones[i].getProyectos();
@@ -283,6 +525,82 @@ public class VolunteerManager {
     }
     return null;
 }
+    
+    public void deleteProject(Scanner scanner) {
+    if (cantidad_organizaciones == 0) {
+        System.out.println("No hay organizaciones cargadas.");
+        return;
+    }
+
+    System.out.println("\n=== ELIMINAR PROYECTO ===");
+    
+    System.out.println("Organizaciones disponibles:");
+    for (int i = 0; i < cantidad_organizaciones; i++) {
+        System.out.printf("%d. %s\n", i + 1, organizaciones[i].getNombre());
+    }
+
+    System.out.print("\nIngrese el nombre de la organización que contiene el proyecto: ");
+    String nombreOrg = scanner.nextLine().trim();
+
+    if (nombreOrg.isEmpty()) {
+        System.out.println("ERROR: El nombre no puede estar vacío.");
+        return;
+    }
+
+    Organization orgEncontrada = searchOrganization(nombreOrg);
+    if (orgEncontrada == null) {
+        System.out.println("No se encontró una organización con ese nombre.");
+        return;
+    }
+
+    Project[] proyectos = orgEncontrada.getProyectos();
+    
+    System.out.printf("\nProyectos de '%s':\n", orgEncontrada.getNombre());
+    boolean hayProyectos = false;
+    for (int i = 0; i < proyectos.length; i++) {
+        if (proyectos[i] != null) {
+            Project p = proyectos[i];
+            System.out.printf("%d. %s - F:%d S:%d E:%d C:%d%n", i + 1,
+                p.getNombre(), p.getFisico(), p.getSocial(), 
+                p.getEficiencia(), p.getNivelCatastrofe());
+            hayProyectos = true;
+        }
+    }
+    
+    if (!hayProyectos) {
+        System.out.println("Esta organización no tiene proyectos para eliminar.");
+        return;
+    }
+    
+    System.out.print("\nIngrese el número del proyecto a eliminar: ");
+    try {
+        int indice = Integer.parseInt(scanner.nextLine().trim()) - 1;
+        
+        if (indice < 0 || indice >= proyectos.length || proyectos[indice] == null) {
+            System.out.println("ERROR: Número de proyecto inválido.");
+            return;
+        }
+        
+        String nombreProyecto = proyectos[indice].getNombre();
+        
+        System.out.printf("¿Está seguro que desea eliminar el proyecto '%s'? (S/N): ", nombreProyecto);
+        String confirmacion = scanner.nextLine().trim().toUpperCase();
+        
+        if (!confirmacion.equals("S")) {
+            System.out.println("Operación cancelada.");
+            return;
+        }
+        
+        orgEncontrada.setProyecto(indice, null);
+        
+        System.out.printf("✓ Proyecto '%s' eliminado exitosamente de la organización '%s'\n", 
+            nombreProyecto, orgEncontrada.getNombre());
+        
+    } catch (NumberFormatException e) {
+        System.out.println("ERROR: Ingrese un número válido.");
+    }
+}
+    
     private String getCellValueAsString(Cell cell) {
     if (cell == null) return "";
     
@@ -389,10 +707,15 @@ public class VolunteerManager {
             return false;
     }
 }
+    
     public Volunteer[] getVoluntarios() { return voluntarios; }
+    
     public int getCantidadVoluntarios() { return cantidad_voluntarios; }
+    
     public Organization[] getOrganizaciones() { return organizaciones; }
+    
     public int getCantidadOrganizaciones() { return cantidad_organizaciones; }
+    
     public void assignVolunteersAutomatically() {
         ArrayList<Project> todosLosProyectos = new ArrayList<>();
 
@@ -430,6 +753,7 @@ public class VolunteerManager {
             }
         }
     }
+    
     public void addVolunteerManually(Scanner scanner) {
         if (cantidad_voluntarios >= voluntarios.length) {
             System.out.println("ERROR: Se alcanzó el límite máximo de voluntarios (" + voluntarios.length + ")");
@@ -538,6 +862,7 @@ public class VolunteerManager {
             System.out.println("ERROR: Los datos del voluntario no son válidos.");
         }
     }
+    
         private double statCheck(Scanner scanner, String tipoStat, double min, double max) {
         while (true) {
             try {
@@ -558,6 +883,101 @@ public class VolunteerManager {
     public Volunteering getVolunteering() {
     return this.volunteering;
     }
+    
+    private int levelCheck(Scanner scanner, String tipoNivel, int min, int max) {
+    while (true) {
+        try {
+            System.out.printf("Ingrese el nivel %s (%d - %d): ", tipoNivel, min, max);
+            int valor = Integer.parseInt(scanner.nextLine().trim());
+            
+            if (valor < min || valor > max) {
+                System.out.printf("ERROR: El valor debe estar entre %d y %d\n", min, max);
+                continue;
+            }
+            
+            return valor;
+        } catch (NumberFormatException e) {
+            System.out.println("ERROR: Ingrese un número válido.");
+        }
+    }
+}
+    
+    private void modifyOrganizationName(Scanner scanner, Organization organizacion) {
+    System.out.print("Ingrese el nuevo nombre para la organización: ");
+    String nuevoNombre = scanner.nextLine().trim();
+    
+    if (nuevoNombre.isEmpty()) {
+        System.out.println("ERROR: El nombre no puede estar vacío.");
+        return;
+    }
+    
+    if (!nuevoNombre.equalsIgnoreCase(organizacion.getNombre()) && 
+        searchOrganization(nuevoNombre) != null) {
+        System.out.println("ERROR: Ya existe una organización con ese nombre.");
+        return;
+    }
+    
+    String nombreAnterior = organizacion.getNombre();
+    organizacion.setNombre(nuevoNombre);
+    System.out.printf("✓ Nombre cambiado de '%s' a '%s'\n", nombreAnterior, nuevoNombre);
+}
+    
+    private void modifyOrganizationProjects(Scanner scanner, Organization organizacion) {
+    Project[] proyectos = organizacion.getProyectos();
+    
+    System.out.println("\nProyectos actuales:");
+    for (int i = 0; i < proyectos.length; i++) {
+        if (proyectos[i] != null) {
+            Project p = proyectos[i];
+            System.out.printf("%d. %s - F:%d S:%d E:%d C:%d%n", i + 1,
+                p.getNombre(), p.getFisico(), p.getSocial(), 
+                p.getEficiencia(), p.getNivelCatastrofe());
+        } else {
+            System.out.printf("%d. [Proyecto vacío]\n", i + 1);
+        }
+    }
+    
+    System.out.print("Ingrese el número del proyecto a modificar (1-" + proyectos.length + "): ");
+    try {
+        int indice = Integer.parseInt(scanner.nextLine().trim()) - 1;
+        
+        if (indice < 0 || indice >= proyectos.length) {
+            System.out.println("ERROR: Número de proyecto inválido.");
+            return;
+        }
+        
+        if (proyectos[indice] == null) {
+            System.out.println("Creando nuevo proyecto en esta posición...");
+        }
+        
+        System.out.print("Nombre del proyecto: ");
+        String nombreProyecto = scanner.nextLine().trim();
+        
+        if (nombreProyecto.isEmpty()) {
+            System.out.println("ERROR: El nombre del proyecto no puede estar vacío.");
+            return;
+        }
+        
+        int fisico = levelCheck(scanner, "físico", 0, 10);
+        if (fisico == -1) return;
+        
+        int social = levelCheck(scanner, "social", 0, 10);
+        if (social == -1) return;
+        
+        int eficiencia = levelCheck(scanner, "eficiencia", 0, 10);
+        if (eficiencia == -1) return;
+        
+        Project nuevoProyecto = new Project(nombreProyecto, fisico, social, eficiencia, 0);
+        organizacion.setProyecto(indice, nuevoProyecto);
+        
+        System.out.printf("✓ Proyecto '%s' %s exitosamente\n", 
+            nombreProyecto, (proyectos[indice] == null ? "creado" : "modificado"));
+        
+    } catch (NumberFormatException e) {
+        System.out.println("ERROR: Ingrese un número válido.");
+    }
+}
+    
     public void setVoluntarios(Volunteer[] voluntarios) {
     this.voluntarios = voluntarios;
     }
