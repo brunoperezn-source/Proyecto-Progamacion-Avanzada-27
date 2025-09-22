@@ -1,6 +1,7 @@
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import org.apache.poi.ss.usermodel.Cell;
@@ -33,6 +34,7 @@ public class VolunteerManager {
         this.organizaciones = new Organization[10];
         this.cantidad_organizaciones = 0;
         this.volunteering = new Volunteering();
+        autoLoadAllData();
     }
     
     public void showVolunteers() {
@@ -143,6 +145,26 @@ public class VolunteerManager {
             System.out.println("Error detallado: " + e.getMessage());
         }
     }
+    
+    public void autoLoadVolunteers() {
+    String defaultFilePath = "Files/voluntarios.xlsx";
+    File file = new File(defaultFilePath);
+    
+    // Check if the file exists
+    if (file.exists() && file.isFile()) {
+        System.out.println("Archivo de voluntarios encontrado. Cargando datos automáticamente...");
+        try {
+            loadVolunteersFromExcel(defaultFilePath);
+            System.out.println("Datos de voluntarios cargados automáticamente desde: " + defaultFilePath);
+        } catch (Exception e) {
+            System.out.println("Error al cargar automáticamente los voluntarios: " + e.getMessage());
+            System.out.println("El programa continuará sin datos previos.");
+        }
+        } else {
+            System.out.println("No se encontró archivo de datos previo. Iniciando con sistema vacío.");
+        }
+    }
+
     
     public void loadOrganizationsFromExcel(String nombreArchivo) {
     try {
@@ -483,6 +505,49 @@ public class VolunteerManager {
     return null;
 }
     
+    public void autoLoadOrganizations() {
+        String defaultFilePath = "Files/organizaciones.xlsx";
+        File file = new File(defaultFilePath);
+
+        if (!file.exists()) {
+            System.out.println("No se encontró archivo de organizaciones previo (" + defaultFilePath + ")");
+            return;
+        }
+
+        if (!file.isFile()) {
+            System.out.println("El path especificado no es un archivo válido: " + defaultFilePath);
+            return;
+        }
+
+        if (!file.canRead()) {
+            System.out.println("No se puede leer el archivo de organizaciones: " + defaultFilePath);
+            System.out.println("Verificar permisos de lectura.");
+            return;
+        }
+
+        System.out.println("Archivo de organizaciones encontrado: " + file.getAbsolutePath());
+        System.out.println("Cargando organizaciones automáticamente...");
+
+        int organizacionesAntes = cantidad_organizaciones;
+
+        try {
+            loadOrganizationsFromExcel(defaultFilePath);
+
+            if (cantidad_organizaciones > organizacionesAntes) {
+                System.out.println("✓ Organizaciones cargadas automáticamente desde: " + defaultFilePath);
+                System.out.println("✓ Se cargaron " + (cantidad_organizaciones - organizacionesAntes) + " organizaciones");
+            } else if (cantidad_organizaciones == organizacionesAntes && organizacionesAntes == 0) {
+                System.out.println("⚠ El archivo existe pero no contiene organizaciones válidas");
+            }
+
+        } catch (Exception e) {
+            System.err.println("✗ Error al cargar automáticamente las organizaciones:");
+            System.err.println("   " + e.getMessage());
+
+            cantidad_organizaciones = organizacionesAntes;
+        }
+    }
+    
     public void modifyProject(Scanner scanner) {
     if (cantidad_organizaciones == 0) {
         System.out.println("No hay organizaciones cargadas.");
@@ -525,6 +590,33 @@ public class VolunteerManager {
     }
     return null;
 }
+    
+    public void autoLoadAllData() {
+        System.out.println("\n=== CARGA AUTOMÁTICA DE DATOS ===");
+
+        System.out.println("\n--- Cargando Voluntarios ---");
+        autoLoadVolunteers();
+
+        System.out.println("\n--- Cargando Organizaciones ---");
+        autoLoadOrganizations();
+
+        System.out.println("\n=== RESUMEN DE CARGA ===");
+        System.out.println("Voluntarios cargados: " + cantidad_voluntarios);
+        System.out.println("Organizaciones cargadas: " + cantidad_organizaciones);
+        int totalProyectos = 0;
+        for (int i = 0; i < cantidad_organizaciones; i++) {
+            if (organizaciones[i] != null) {
+                Project[] proyectos = organizaciones[i].getProyectos();
+                for (Project proyecto : proyectos) {
+                    if (proyecto != null) {
+                        totalProyectos++;
+                    }
+                }
+            }
+        }
+        System.out.println("Proyectos cargados: " + totalProyectos);
+        System.out.println("=== FIN CARGA AUTOMÁTICA ===\n");
+    }
     
     public void deleteProject(Scanner scanner) {
     if (cantidad_organizaciones == 0) {

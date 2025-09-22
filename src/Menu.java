@@ -29,7 +29,7 @@ public class Menu {
             System.out.print("Seleccione una opción: ");
             option = scanner.nextInt();
             scanner.nextLine();
-            
+
             switch(option) {
                 case 1:
                     showVolunteerMenu();
@@ -41,6 +41,22 @@ public class Menu {
                     showProjectMenu();
                     break;
                 case 0:
+                    System.out.println("Guardando datos antes de salir...");
+
+                    if (manager.getCantidadVoluntarios() > 0) {
+                        Writer.exportExcel(manager.getVoluntarios());
+                        System.out.println("Datos de voluntarios exportados exitosamente.");
+                    } else {
+                        System.out.println("No hay voluntarios para exportar.");
+                    }
+
+                    if (manager.getCantidadOrganizaciones() > 0) {
+                        Writer.exportOrganizationsExcel(manager.getOrganizaciones(), manager.getCantidadOrganizaciones());
+                        System.out.println("Datos de organizaciones exportados exitosamente.");
+                    } else {
+                        System.out.println("No hay organizaciones para exportar.");
+                    }
+
                     System.out.println("Saliendo del sistema...");
                     break;
                 default:
