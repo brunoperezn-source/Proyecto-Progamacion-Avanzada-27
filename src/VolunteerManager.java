@@ -263,7 +263,7 @@ public class VolunteerManager {
     }
     }
     
-    public void addOrganizationManually(Scanner scanner) {
+    public void addOrganizationManually(Scanner scanner) throws ProjectNotFoundException {
     if (cantidad_organizaciones >= organizaciones.length) {
         System.out.println("ERROR: Se alcanzó el límite máximo de organizaciones (" + organizaciones.length + ")");
         return;
@@ -555,13 +555,8 @@ public class VolunteerManager {
     }
 
     System.out.println("\n=== MODIFICAR PROYECTO ===");
-    
-    System.out.println("Organizaciones disponibles:");
-    for (int i = 0; i < cantidad_organizaciones; i++) {
-        System.out.printf("%d. %s\n", i + 1, organizaciones[i].getNombre());
-    }
 
-    System.out.print("\nIngrese el nombre de la organización que contiene el proyecto: ");
+    System.out.print("Ingrese el nombre de la organización que contiene el proyecto: ");
     String nombreOrg = scanner.nextLine().trim();
 
     if (nombreOrg.isEmpty()) {
@@ -569,27 +564,81 @@ public class VolunteerManager {
         return;
     }
 
-    Organization orgEncontrada = searchOrganization(nombreOrg);
-    if (orgEncontrada == null) {
-        System.out.println("No se encontró una organización con ese nombre.");
-        return;
-    }
+    try {
+        Organization orgEncontrada = searchOrganization(nombreOrg);
+        if (orgEncontrada == null) {
+            System.out.println("No se encontró una organización con ese nombre.");
+            return;
+        }
 
-    modifyOrganizationProjects(scanner, orgEncontrada);
-}
-    
-    public Project searchProject(String nombreProyecto) {
-    for (int i = 0; i < cantidad_organizaciones; i++) {
-        Project[] proyectos = organizaciones[i].getProyectos();
-        for (int j = 0; j < proyectos.length; j++) {
-            if (proyectos[j] != null && 
-                proyectos[j].getNombre().equalsIgnoreCase(nombreProyecto.trim())) {
-                return proyectos[j];
+        System.out.print("Ingrese el nombre del proyecto a modificar: ");
+        String nombreProyecto = scanner.nextLine().trim();
+
+        Project proyectoEncontrado = null;
+        int indiceProyecto = -1;
+        Project[] proyectos = orgEncontrada.getProyectos();
+
+        for (int i = 0; i < proyectos.length; i++) {
+            if (proyectos[i] != null && 
+                proyectos[i].getNombre().equalsIgnoreCase(nombreProyecto)) {
+                proyectoEncontrado = proyectos[i];
+                indiceProyecto = i;
+                break;
             }
         }
+
+        if (proyectoEncontrado == null) {
+            throw new ProjectNotFoundException(nombreProyecto, orgEncontrada.getNombre());
+        }
+
+        System.out.println("Proyecto encontrado: " + proyectoEncontrado.getNombre());
+        modifyProjectDetails(scanner, proyectoEncontrado);
+
+    } catch (ProjectNotFoundException e) {
+        System.out.println("ERROR: " + e.getMessage());
     }
-    return null;
 }
+    
+    private void modifyProjectDetails(Scanner scanner, Project proyecto) {
+        System.out.println("Modificando proyecto: " + proyecto.getNombre());
+
+        System.out.print("Nuevo nombre (actual: " + proyecto.getNombre() + "): ");
+        String nuevoNombre = scanner.nextLine().trim();
+        if (!nuevoNombre.isEmpty()) {
+            proyecto.setNombre(nuevoNombre);
+        }
+
+        int nuevoFisico = levelCheck(scanner, "físico", 0, 10);
+        if (nuevoFisico != -1) {
+            proyecto.setFisico(nuevoFisico);
+        }
+
+        int nuevoSocial = levelCheck(scanner, "social", 0, 10);
+        if (nuevoSocial != -1) {
+            proyecto.setSocial(nuevoSocial);
+        }
+
+        int nuevaEficiencia = levelCheck(scanner, "eficiencia", 0, 10);
+        if (nuevaEficiencia != -1) {
+            proyecto.setEficiencia(nuevaEficiencia);
+        }
+
+        System.out.println("✓ Proyecto modificado exitosamente");
+    }
+    
+    
+    public Project searchProject(String nombreProyecto) throws ProjectNotFoundException {
+        for (int i = 0; i < cantidad_organizaciones; i++) {
+            Project[] proyectos = organizaciones[i].getProyectos();
+            for (int j = 0; j < proyectos.length; j++) {
+                if (proyectos[j] != null && 
+                    proyectos[j].getNombre().equalsIgnoreCase(nombreProyecto.trim())) {
+                    return proyectos[j];
+                }
+            }
+        }
+        throw new ProjectNotFoundException(nombreProyecto);
+    }
     
     public void autoLoadAllData() {
         System.out.println("\n=== CARGA AUTOMÁTICA DE DATOS ===");
@@ -619,80 +668,57 @@ public class VolunteerManager {
     }
     
     public void deleteProject(Scanner scanner) {
-    if (cantidad_organizaciones == 0) {
-        System.out.println("No hay organizaciones cargadas.");
-        return;
-    }
-
-    System.out.println("\n=== ELIMINAR PROYECTO ===");
-    
-    System.out.println("Organizaciones disponibles:");
-    for (int i = 0; i < cantidad_organizaciones; i++) {
-        System.out.printf("%d. %s\n", i + 1, organizaciones[i].getNombre());
-    }
-
-    System.out.print("\nIngrese el nombre de la organización que contiene el proyecto: ");
-    String nombreOrg = scanner.nextLine().trim();
-
-    if (nombreOrg.isEmpty()) {
-        System.out.println("ERROR: El nombre no puede estar vacío.");
-        return;
-    }
-
-    Organization orgEncontrada = searchOrganization(nombreOrg);
-    if (orgEncontrada == null) {
-        System.out.println("No se encontró una organización con ese nombre.");
-        return;
-    }
-
-    Project[] proyectos = orgEncontrada.getProyectos();
-    
-    System.out.printf("\nProyectos de '%s':\n", orgEncontrada.getNombre());
-    boolean hayProyectos = false;
-    for (int i = 0; i < proyectos.length; i++) {
-        if (proyectos[i] != null) {
-            Project p = proyectos[i];
-            System.out.printf("%d. %s - F:%d S:%d E:%d C:%d%n", i + 1,
-                p.getNombre(), p.getFisico(), p.getSocial(), 
-                p.getEficiencia(), p.getNivelCatastrofe());
-            hayProyectos = true;
-        }
-    }
-    
-    if (!hayProyectos) {
-        System.out.println("Esta organización no tiene proyectos para eliminar.");
-        return;
-    }
-    
-    System.out.print("\nIngrese el número del proyecto a eliminar: ");
-    try {
-        int indice = Integer.parseInt(scanner.nextLine().trim()) - 1;
-        
-        if (indice < 0 || indice >= proyectos.length || proyectos[indice] == null) {
-            System.out.println("ERROR: Número de proyecto inválido.");
+        if (cantidad_organizaciones == 0) {
+            System.out.println("No hay organizaciones cargadas.");
             return;
         }
-        
-        String nombreProyecto = proyectos[indice].getNombre();
-        
-        System.out.printf("¿Está seguro que desea eliminar el proyecto '%s'? (S/N): ", nombreProyecto);
-        String confirmacion = scanner.nextLine().trim().toUpperCase();
-        
-        if (!confirmacion.equals("S")) {
-            System.out.println("Operación cancelada.");
-            return;
+
+        System.out.println("\n=== ELIMINAR PROYECTO ===");
+
+        System.out.print("Ingrese el nombre de la organización: ");
+        String nombreOrg = scanner.nextLine().trim();
+
+        try {
+            Organization orgEncontrada = searchOrganization(nombreOrg);
+            if (orgEncontrada == null) {
+                System.out.println("No se encontró una organización con ese nombre.");
+                return;
+            }
+
+            System.out.print("Ingrese el nombre del proyecto a eliminar: ");
+            String nombreProyecto = scanner.nextLine().trim();
+
+            Project[] proyectos = orgEncontrada.getProyectos();
+            boolean proyectoEncontrado = false;
+
+            for (int i = 0; i < proyectos.length; i++) {
+                if (proyectos[i] != null && 
+                    proyectos[i].getNombre().equalsIgnoreCase(nombreProyecto)) {
+
+                    System.out.printf("¿Está seguro que desea eliminar el proyecto '%s'? (S/N): ", 
+                        nombreProyecto);
+                    String confirmacion = scanner.nextLine().trim().toUpperCase();
+
+                    if (confirmacion.equals("S")) {
+                        orgEncontrada.setProyecto(i, null);
+                        System.out.printf("✓ Proyecto '%s' eliminado exitosamente\n", nombreProyecto);
+                    } else {
+                        System.out.println("Operación cancelada.");
+                    }
+                    proyectoEncontrado = true;
+                    break;
+                }
+            }
+
+            if (!proyectoEncontrado) {
+                throw new ProjectNotFoundException(nombreProyecto, orgEncontrada.getNombre());
+            }
+
+        } catch (ProjectNotFoundException e) {
+            System.out.println("ERROR: " + e.getMessage());
         }
-        
-        orgEncontrada.setProyecto(indice, null);
-        
-        System.out.printf("✓ Proyecto '%s' eliminado exitosamente de la organización '%s'\n", 
-            nombreProyecto, orgEncontrada.getNombre());
-        
-    } catch (NumberFormatException e) {
-        System.out.println("ERROR: Ingrese un número válido.");
     }
-}
-    
+
     private String getCellValueAsString(Cell cell) {
     if (cell == null) return "";
     
@@ -992,56 +1018,49 @@ public class VolunteerManager {
         }
     }
     
-    public void addVolunteerManually(Scanner scanner) {
+    public void addVolunteerManually(Scanner scanner) throws InvalidVolunteerException {
         if (cantidad_voluntarios >= voluntarios.length) {
-            System.out.println("ERROR: Se alcanzó el límite máximo de voluntarios (" + voluntarios.length + ")");
-            return;
+            throw new InvalidVolunteerException("Se alcanzó el límite máximo de voluntarios (" + voluntarios.length + ")");
         }
 
         System.out.println("\n=== AGREGAR VOLUNTARIO MANUALMENTE ===");
 
-        
         System.out.print("Ingrese el nombre completo del voluntario: ");
         String nombre = scanner.nextLine().trim();
 
         if (nombre.isEmpty()) {
-            System.out.println("ERROR: El nombre no puede estar vacío.");
-            return;
+            throw new InvalidVolunteerException("El nombre no puede estar vacío");
         }
 
         System.out.print("Ingrese el RUT del voluntario (ej: 12345678-9): ");
         String rut = scanner.nextLine().trim();
 
         if (rut.isEmpty()) {
-            System.out.println("ERROR: El RUT no puede estar vacío.");
-            return;
+            throw new InvalidVolunteerException("El RUT no puede estar vacío");
         }
 
-        
         try {
             int rutNumerico = Integer.parseInt(rut.replaceAll("[^0-9]", ""));
             for (int i = 0; i < cantidad_voluntarios; i++) {
                 if (voluntarios[i].get_rut() == rutNumerico) {
-                    System.out.println("ERROR: Ya existe un voluntario con ese RUT.");
-                    return;
+                    throw new InvalidVolunteerException(rut, "RUT ya existe en el sistema");
                 }
             }
         } catch (NumberFormatException e) {
-            System.out.println("ERROR: Formato de RUT inválido.");
-            return;
+            throw new InvalidVolunteerException(rut, "Formato de RUT inválido");
         }
 
         
         System.out.println("\n--- Estadísticas del Voluntario ---");
 
         double fisico = statCheck(scanner, "física", 0.0, 10.0);
-        if (fisico == -1) return; // Error en la entrada
+        if (fisico == -1) return; 
 
         double social = statCheck(scanner, "social", 0.0, 10.0);
-        if (social == -1) return; // Error en la entrada
+        if (social == -1) return; 
 
         double eficiencia = statCheck(scanner, "eficiencia", 0.0, 10.0);
-        if (eficiencia == -1) return; // Error en la entrada
+        if (eficiencia == -1) return; 
 
         
         Stats stats = new Stats(fisico, social, eficiencia);
@@ -1087,19 +1106,18 @@ public class VolunteerManager {
         Volunteer nuevoVoluntario = new Volunteer(nombre, rut, stats, schedule);
 
 
-        if (nuevoVoluntario.is_valid()) {
-            voluntarios[cantidad_voluntarios] = nuevoVoluntario;
-            cantidad_voluntarios++;
-
-            System.out.println("\n✓ VOLUNTARIO AGREGADO EXITOSAMENTE");
-            System.out.println("Nombre: " + nombre);
-            System.out.println("RUT: " + nuevoVoluntario.get_rut());
-            System.out.println("Estadísticas - Físico: " + fisico + ", Social: " + social + ", Eficiencia: " + eficiencia);
-            System.out.println("Total de voluntarios en sistema: " + cantidad_voluntarios);
-        } else {
-            System.out.println("ERROR: Los datos del voluntario no son válidos.");
+        if (!nuevoVoluntario.is_valid()) {
+            throw new InvalidVolunteerException(rut, "Los datos del voluntario no son válidos");
         }
-    }
+
+        voluntarios[cantidad_voluntarios] = nuevoVoluntario;
+        cantidad_voluntarios++;
+
+        System.out.println("✓ VOLUNTARIO AGREGADO EXITOSAMENTE");
+        System.out.println("Nombre: " + nombre);
+        System.out.println("RUT: " + nuevoVoluntario.get_rut());
+        System.out.println("Total de voluntarios en sistema: " + cantidad_voluntarios);
+        }
     
         private double statCheck(Scanner scanner, String tipoStat, double min, double max) {
         while (true) {

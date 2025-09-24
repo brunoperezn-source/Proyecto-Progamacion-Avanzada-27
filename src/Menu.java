@@ -18,7 +18,7 @@ public class Menu {
         this.manager = manager;
     }
     
-    public void showMainMenu() {
+    public void showMainMenu() throws ProjectNotFoundException {
         int option;
         do {
             System.out.println("\n=== SISTEMA DE GESTIÓN DE VOLUNTARIOS ===");
@@ -108,7 +108,7 @@ public class Menu {
         } while(option != 0);
     }
     
-    private void showOrganizationMenu() {
+    private void showOrganizationMenu() throws ProjectNotFoundException {
         int option;
         do {
             System.out.println("\n--- ORGANIZACIONES ---");
@@ -156,20 +156,24 @@ public class Menu {
             System.out.println("\n--- PROYECTOS ---");
             System.out.println("1. Modificar proyecto");
             System.out.println("2. Eliminar proyecto");
-            System.out.println("3. Denominar Emergencia");
+            System.out.println("3. Buscar proyecto");
+            System.out.println("4. Denominar Emergencia");
             System.out.println("0. Volver al menú principal");
             System.out.print("Seleccione una opción: ");
             option = scanner.nextInt();
             scanner.nextLine();
-            
+
             switch(option) {
                 case 1:
-                    manager.modifyProject(scanner);
+                    modifyProject();
                     break;
                 case 2:
-                    manager.deleteProject(scanner);
+                    deleteProject();
                     break;
                 case 3:
+                    searchProject();
+                    break;
+                case 4:
                     declareEmergency();
                     break;
                 case 0:
@@ -212,8 +216,47 @@ public class Menu {
         manager.assignVolunteersAutomatically();
     }
     
+    private void modifyProject() {
+        manager.modifyProject(scanner);
+    }
+    
+    private void deleteProject() {
+        manager.deleteProject(scanner);
+    }
+    
+    private void searchProject() {
+        System.out.print("Ingrese el nombre del proyecto a buscar: ");
+        String nombreProyecto = scanner.nextLine().trim();
+
+        if (nombreProyecto.isEmpty()) {
+            System.out.println("ERROR: El nombre no puede estar vacío.");
+            return;
+        }
+
+        try {
+            Project proyecto = manager.searchProject(nombreProyecto);
+            System.out.println("\n✓ PROYECTO ENCONTRADO:");
+            System.out.println("Nombre: " + proyecto.getNombre());
+            System.out.println("Nivel Físico: " + proyecto.getFisico());
+            System.out.println("Nivel Social: " + proyecto.getSocial());
+            System.out.println("Nivel Eficiencia: " + proyecto.getEficiencia());
+            System.out.println("Nivel Catástrofe: " + proyecto.getNivelCatastrofe());
+
+        } catch (ProjectNotFoundException e) {
+            System.out.println("PROYECTO NO ENCONTRADO: " + e.getMessage());
+            System.out.println("\nSugerencia: Verifique la lista de proyectos disponibles:");
+            manager.showOrganizations(); 
+        }
+    }
+
+    
     private void addVolunteerManually() {
-        manager.addVolunteerManually(scanner);
+        try {
+            manager.addVolunteerManually(scanner);
+        } catch (InvalidVolunteerException e) {
+            System.out.println("ERROR AL AGREGAR VOLUNTARIO: " + e.getMessage());
+            System.out.println("Por favor, verifique los datos e intente nuevamente.");
+        }
     }
     
     public Scanner getScanner() {
