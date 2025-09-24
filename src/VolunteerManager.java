@@ -809,6 +809,8 @@ public class VolunteerManager {
     public int getCantidadOrganizaciones() { return cantidad_organizaciones; }
     
     public void assignVolunteersAutomatically() {
+        volunteering.setCalculator(new StandardCompatibilityCalculator());
+        
         ArrayList<Project> todosLosProyectos = new ArrayList<>();
 
         for (int i = 0; i < cantidad_organizaciones; i++) {
@@ -820,29 +822,173 @@ public class VolunteerManager {
             }
         }
 
+        System.out.println("\n=== ASIGNACIÓN AUTOMÁTICA DE VOLUNTARIOS ===");
+        int asignaciones = 0;
+
         for (int i = 0; i < cantidad_voluntarios; i++) {
             if (voluntarios[i] != null) {
                 Project mejorProyecto = null;
                 double mejorCompatibilidad = 0.0;
 
                 for (Project proyecto : todosLosProyectos) {
-                    Stats volunteerStats = voluntarios[i].get_stats();
-                    if (volunteerStats.get_physical() >= proyecto.getFisico() &&
-                        volunteerStats.get_social() >= proyecto.getSocial() &&
-                        volunteerStats.get_efficiency() >= proyecto.getEficiencia()) {
-
-                        double compatibilidad = volunteering.calculateCompatibility(voluntarios[i], proyecto);
-                        if (compatibilidad > mejorCompatibilidad) {
-                            mejorCompatibilidad = compatibilidad;
-                            mejorProyecto = proyecto;
-                        }
+                    double compatibilidad = volunteering.calculateCompatibility(voluntarios[i], proyecto);
+                    if (compatibilidad > mejorCompatibilidad) {
+                        mejorCompatibilidad = compatibilidad;
+                        mejorProyecto = proyecto;
                     }
                 }
 
                 if (mejorProyecto != null) {
-                    System.out.printf("%s asignado a %s\n", voluntarios[i].get_name(), mejorProyecto.getNombre());
+                    System.out.printf("✓ %s asignado a '%s' (Compatibilidad: %.2f)\n", 
+                        voluntarios[i].get_name(), mejorProyecto.getNombre(), mejorCompatibilidad);
+                    asignaciones++;
                 }
             }
+        }
+        
+        System.out.println("\nTotal de asignaciones realizadas: " + asignaciones);
+    }
+    
+    public void assignVolunteersEmergency() {
+        volunteering.setCalculator(new EmergencyCompatibilityCalculator());
+        
+        ArrayList<Project> proyectosEmergencia = new ArrayList<>();
+        ArrayList<Project> proyectosNormales = new ArrayList<>();
+
+        for (int i = 0; i < cantidad_organizaciones; i++) {
+            Project[] proyectos = organizaciones[i].getProyectos();
+            for (int j = 0; j < proyectos.length; j++) {
+                if (proyectos[j] != null) {
+                    if (proyectos[j].getNivelCatastrofe() > 0) {
+                        proyectosEmergencia.add(proyectos[j]);
+                    } else {
+                        proyectosNormales.add(proyectos[j]);
+                    }
+                }
+            }
+        }
+
+        System.out.println("\n=== ASIGNACIÓN DE EMERGENCIA ===");
+        System.out.println("Proyectos de emergencia encontrados: " + proyectosEmergencia.size());
+        
+        int asignacionesEmergencia = 0;
+        int asignacionesNormales = 0;
+
+        for (int i = 0; i < cantidad_voluntarios; i++) {
+            if (voluntarios[i] != null) {
+                Project mejorProyectoEmergencia = null;
+                double mejorCompatibilidadEmergencia = 0.0;
+
+                for (Project proyecto : proyectosEmergencia) {
+                    double compatibilidad = volunteering.calculateCompatibility(voluntarios[i], proyecto);
+                    if (compatibilidad > mejorCompatibilidadEmergencia) {
+                        mejorCompatibilidadEmergencia = compatibilidad;
+                        mejorProyectoEmergencia = proyecto;
+                    }
+                }
+
+                if (mejorProyectoEmergencia != null) {
+                    System.out.printf("🚨 EMERGENCIA: %s asignado a '%s' (Nivel: %d, Compatibilidad: %.2f)\n", 
+                        voluntarios[i].get_name(), 
+                        mejorProyectoEmergencia.getNombre(),
+                        mejorProyectoEmergencia.getNivelCatastrofe(),
+                        mejorCompatibilidadEmergencia);
+                    asignacionesEmergencia++;
+                } else {
+                    Project mejorProyectoNormal = null;
+                    double mejorCompatibilidadNormal = 0.0;
+
+                    for (Project proyecto : proyectosNormales) {
+                        double compatibilidad = volunteering.calculateCompatibility(voluntarios[i], proyecto);
+                        if (compatibilidad > mejorCompatibilidadNormal) {
+                            mejorCompatibilidadNormal = compatibilidad;
+                            mejorProyectoNormal = proyecto;
+                        }
+                    }
+
+                    if (mejorProyectoNormal != null) {
+                        System.out.printf("✓ %s asignado a '%s' (Compatibilidad: %.2f)\n", 
+                            voluntarios[i].get_name(), mejorProyectoNormal.getNombre(), mejorCompatibilidadNormal);
+                        asignacionesNormales++;
+                    }
+                }
+            }
+        }
+
+        System.out.println("\n=== RESUMEN DE ASIGNACIÓN DE EMERGENCIA ===");
+        System.out.println("Asignaciones a proyectos de emergencia: " + asignacionesEmergencia);
+        System.out.println("Asignaciones a proyectos normales: " + asignacionesNormales);
+        System.out.println("Total de asignaciones: " + (asignacionesEmergencia + asignacionesNormales));
+    }
+    
+    public void declareEmergency(Scanner scanner) {
+        if (cantidad_organizaciones == 0) {
+            System.out.println("No hay organizaciones cargadas.");
+            return;
+        }
+
+        System.out.println("\n=== DECLARAR EMERGENCIA ===");
+        
+        System.out.println("Proyectos disponibles:");
+        int contador = 1;
+        ArrayList<Project> todosProyectos = new ArrayList<>();
+        
+        for (int i = 0; i < cantidad_organizaciones; i++) {
+            Project[] proyectos = organizaciones[i].getProyectos();
+            for (int j = 0; j < proyectos.length; j++) {
+                if (proyectos[j] != null) {
+                    System.out.printf("%d. %s (Org: %s) - Nivel actual: %d\n", 
+                        contador, proyectos[j].getNombre(), 
+                        organizaciones[i].getNombre(),
+                        proyectos[j].getNivelCatastrofe());
+                    todosProyectos.add(proyectos[j]);
+                    contador++;
+                }
+            }
+        }
+
+        if (todosProyectos.isEmpty()) {
+            System.out.println("No hay proyectos disponibles.");
+            return;
+        }
+
+        try {
+            System.out.print("Seleccione el número del proyecto: ");
+            int seleccion = Integer.parseInt(scanner.nextLine().trim()) - 1;
+            
+            if (seleccion < 0 || seleccion >= todosProyectos.size()) {
+                System.out.println("ERROR: Selección inválida.");
+                return;
+            }
+
+            Project proyectoSeleccionado = todosProyectos.get(seleccion);
+            
+            System.out.print("Ingrese el nivel de emergencia (1-10): ");
+            int nivelEmergencia = Integer.parseInt(scanner.nextLine().trim());
+            
+            if (nivelEmergencia < 1 || nivelEmergencia > 10) {
+                System.out.println("ERROR: El nivel debe estar entre 1 y 10.");
+                return;
+            }
+
+            int nivelAnterior = proyectoSeleccionado.getNivelCatastrofe();
+            proyectoSeleccionado.setNivelCatastrofe(nivelEmergencia);
+            
+            System.out.printf("✓ EMERGENCIA DECLARADA\n");
+            System.out.printf("Proyecto: %s\n", proyectoSeleccionado.getNombre());
+            System.out.printf("Nivel anterior: %d\n", nivelAnterior);
+            System.out.printf("Nivel actual: %d\n", nivelEmergencia);
+            
+            if (nivelEmergencia >= 7) {
+                System.out.println("⚠️  ALERTA: Nivel de emergencia CRÍTICO");
+            } else if (nivelEmergencia >= 4) {
+                System.out.println("⚠️  ALERTA: Nivel de emergencia ALTO");
+            } else {
+                System.out.println("ℹ️  Nivel de emergencia MODERADO");
+            }
+
+        } catch (NumberFormatException e) {
+            System.out.println("ERROR: Ingrese números válidos.");
         }
     }
     

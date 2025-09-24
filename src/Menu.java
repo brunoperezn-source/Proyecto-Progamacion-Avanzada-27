@@ -95,7 +95,7 @@ public class Menu {
                     assignVolunteers();
                     break;
                 case 5:
-                    System.out.println("Función no implementada...");
+                    assignVolunteersEmergency();
                     break;
                 case 6:
                     deleteVolunteer();
@@ -170,7 +170,7 @@ public class Menu {
                     manager.deleteProject(scanner);
                     break;
                 case 3:
-                    System.out.println("Función no implementada...");
+                    declareEmergency();
                     break;
                 case 0:
                     break;
@@ -231,4 +231,28 @@ public class Menu {
     public void setManager(VolunteerManager manager) {
         this.manager = manager;
     }
+    private void assignVolunteersEmergency() {
+        if (manager.getCantidadVoluntarios() == 0) {
+            System.out.println("No hay voluntarios cargados.");
+            return;
+        }
+        
+        if (manager.getCantidadOrganizaciones() == 0) {
+            System.out.println("No hay organizaciones cargadas.");
+            return;
+        }
+        
+        System.out.println("Iniciando asignación de emergencia...");
+        manager.assignVolunteersEmergency();
+    }
+    
+    private void declareEmergency() {
+        if (manager.getCantidadOrganizaciones() == 0) {
+            System.out.println("No hay organizaciones cargadas.");
+            return;
+        }
+        
+        manager.declareEmergency(scanner);
+    }
+    
 }
