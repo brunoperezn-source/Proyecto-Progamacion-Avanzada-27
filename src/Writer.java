@@ -73,73 +73,73 @@ public class Writer {
         }
     }
     public static void exportOrganizationsExcel(Organization[] organizations, int cantidadOrganizaciones) {
-    Path filesDir = Paths.get("Files");
-    try {
-        Files.createDirectories(filesDir);
-    } catch (IOException e) {
-        System.err.println("Error creating Files directory: " + e.getMessage());
-        return;
-    }
-    
-    String filename = "Files/organizaciones.xlsx";
-    XSSFWorkbook workbook = new XSSFWorkbook();
-    Sheet sheet = workbook.createSheet("Organizations");
-    Row headerRow = sheet.createRow(0);
-    String[] headers = {
-        "nombre_organizacion", "nombre_proyecto", "nivel_fisico", 
-        "nivel_social", "nivel_eficiencia", "nivel_catastrofe"
-    };
-    
-    for (int i = 0; i < headers.length; i++) {
-        Cell cell = headerRow.createCell(i);
-        cell.setCellValue(headers[i]);
-    }
-    
-    int rowNum = 1;
-    for (int i = 0; i < cantidadOrganizaciones; i++) {
-        if (organizations[i] != null) {
-            Organization org = organizations[i];
-            Project[] proyectos = org.getProyectos();
-            boolean hasProjects = false;
-            for (Project proyecto : proyectos) {
-                if (proyecto != null) {
-                    hasProjects = true;
+        Path filesDir = Paths.get("Files");
+        try {
+            Files.createDirectories(filesDir);
+        } catch (IOException e) {
+            System.err.println("Error creating Files directory: " + e.getMessage());
+            return;
+        }
+
+        String filename = "Files/organizaciones.xlsx";
+        XSSFWorkbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("Organizations");
+        Row headerRow = sheet.createRow(0);
+        String[] headers = {
+            "nombre_organizacion", "nombre_proyecto", "nivel_fisico", 
+            "nivel_social", "nivel_eficiencia", "nivel_catastrofe"
+        };
+
+        for (int i = 0; i < headers.length; i++) {
+            Cell cell = headerRow.createCell(i);
+            cell.setCellValue(headers[i]);
+        }
+
+        int rowNum = 1;
+        for (int i = 0; i < cantidadOrganizaciones; i++) {
+            if (organizations[i] != null) {
+                Organization org = organizations[i];
+                Project[] proyectos = org.getProyectos();
+                boolean hasProjects = false;
+                for (Project proyecto : proyectos) {
+                    if (proyecto != null) {
+                        hasProjects = true;
+                        Row row = sheet.createRow(rowNum++);
+                        row.createCell(0).setCellValue(org.getNombre());
+                        row.createCell(1).setCellValue(proyecto.getNombre());
+                        row.createCell(2).setCellValue(proyecto.getFisico());
+                        row.createCell(3).setCellValue(proyecto.getSocial());
+                        row.createCell(4).setCellValue(proyecto.getEficiencia());
+                        row.createCell(5).setCellValue(proyecto.getNivelCatastrofe());
+                    }
+                }
+                if (!hasProjects) {
                     Row row = sheet.createRow(rowNum++);
                     row.createCell(0).setCellValue(org.getNombre());
-                    row.createCell(1).setCellValue(proyecto.getNombre());
-                    row.createCell(2).setCellValue(proyecto.getFisico());
-                    row.createCell(3).setCellValue(proyecto.getSocial());
-                    row.createCell(4).setCellValue(proyecto.getEficiencia());
-                    row.createCell(5).setCellValue(proyecto.getNivelCatastrofe());
+                    row.createCell(1).setCellValue(""); 
+                    row.createCell(2).setCellValue(0);
+                    row.createCell(3).setCellValue(0);
+                    row.createCell(4).setCellValue(0);
+                    row.createCell(5).setCellValue(0);
                 }
             }
-            if (!hasProjects) {
-                Row row = sheet.createRow(rowNum++);
-                row.createCell(0).setCellValue(org.getNombre());
-                row.createCell(1).setCellValue(""); 
-                row.createCell(2).setCellValue(0);
-                row.createCell(3).setCellValue(0);
-                row.createCell(4).setCellValue(0);
-                row.createCell(5).setCellValue(0);
+        }
+
+        for (int i = 0; i < headers.length; i++) {
+            sheet.autoSizeColumn(i);
+        }
+
+        try (FileOutputStream outputStream = new FileOutputStream(filename)) {
+            workbook.write(outputStream);
+            System.out.println("Excel file created successfully: " + Paths.get(filename).toAbsolutePath());
+        } catch (IOException e) {
+            System.err.println("Error writing Excel file: " + e.getMessage());
+        } finally {
+            try {
+                workbook.close();
+            } catch (IOException e) {
+                System.err.println("Error closing workbook: " + e.getMessage());
             }
         }
+       }
     }
-    
-    for (int i = 0; i < headers.length; i++) {
-        sheet.autoSizeColumn(i);
-    }
-    
-    try (FileOutputStream outputStream = new FileOutputStream(filename)) {
-        workbook.write(outputStream);
-        System.out.println("Excel file created successfully: " + Paths.get(filename).toAbsolutePath());
-    } catch (IOException e) {
-        System.err.println("Error writing Excel file: " + e.getMessage());
-    } finally {
-        try {
-            workbook.close();
-        } catch (IOException e) {
-            System.err.println("Error closing workbook: " + e.getMessage());
-        }
-    }
-    }
-}
